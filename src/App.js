@@ -797,7 +797,7 @@ export default function App(){
 
       {/* タイムライン・マイページ */}
       {tab!==0&&(
-        <>
+        <>{console.log("DEBUG tab=",tab,"discoveries=",discoveries.length,"nearby=",nearby.length)}
           <div style={{position:"sticky",top:0,zIndex:30,background:"white",borderBottom:"1px solid #eee8e0"}}>
             <div style={{padding:"50px 16px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <button onClick={()=>setTab(0)} style={{display:"flex",alignItems:"center",gap:4,border:"none",background:"none",cursor:"pointer",fontSize:13,color:"#6db85c",fontWeight:700,padding:0,fontFamily:font}}>‹ 地図</button>

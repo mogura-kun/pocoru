@@ -599,6 +599,9 @@ export default function App(){
   const centerMeRef = useRef(null);
   const sessionRef  = useRef(null);
 
+  // タブ変更ログ
+  useEffect(()=>{console.log("TAB CHANGED:",tab);},[tab]);
+
   // GPS
   useEffect(()=>{
     if(!navigator.geolocation){setLocStatus("denied");return;}
@@ -759,8 +762,7 @@ export default function App(){
         onSignOut={handleSignOut} userName={myUserName}/>
 
       {/* ホームタブ */}
-      {tab===0&&(
-        <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"100dvh",display:"flex",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
+      <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"100dvh",display:tab===0?"flex":"none",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
           {/* 上バー */}
           <div style={{flexShrink:0,paddingTop:"env(safe-area-inset-top,44px)",background:"rgba(250,247,242,0.98)",borderBottom:"1px solid rgba(0,0,0,0.08)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 16px 0"}}>
@@ -793,11 +795,10 @@ export default function App(){
             <button onClick={()=>setShowCapture(true)} style={{width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:26,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",display:"flex",alignItems:"center",justifyContent:"center",marginLeft:"auto"}}>+</button>
           </div>
         </div>
-      )}
+      </div>
 
       {/* タイムライン・マイページ */}
-      {tab!==0&&(
-        <div style={{position:"fixed",top:0,bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,display:"flex",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
+      <div style={{position:"fixed",top:0,bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,display:tab!==0?"flex":"none",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
           <div style={{flexShrink:0,paddingTop:"env(safe-area-inset-top,44px)",background:"white",borderBottom:"1px solid #eee8e0"}}>
             <div style={{padding:"6px 16px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <button onClick={()=>setTab(0)} style={{display:"flex",alignItems:"center",gap:4,border:"none",background:"none",cursor:"pointer",fontSize:13,color:"#6db85c",fontWeight:700,padding:0,fontFamily:font}}>‹ 地図</button>
@@ -887,8 +888,7 @@ export default function App(){
           {!showCapture&&!showAI&&!selected&&!showWeatherPanel&&!showProfile&&(
             <button onClick={()=>setShowCapture(true)} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px) + 22px)",right:18,width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:24,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",zIndex:50,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
           )}
-        </div>
-      )}
+      </div>
 
       {/* モーダル */}
       {selected&&<DetailModal item={selected} isOwn={myDiscoveries.some(d=>d.id===selected.id)} onClose={()=>setSelected(null)} onHeart={handleHeart} myHearts={myHearts} onUpdate={handleUpdate} onViewUser={(id,name)=>{setSelected(null);setProfileTarget({id,name});setShowProfile(true);}}/>}

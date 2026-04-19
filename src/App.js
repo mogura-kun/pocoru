@@ -599,9 +599,6 @@ export default function App(){
   const centerMeRef = useRef(null);
   const sessionRef  = useRef(null);
 
-  // タブ変更ログ
-  useEffect(()=>{console.log("TAB CHANGED:",tab);},[tab]);
-
   // GPS
   useEffect(()=>{
     if(!navigator.geolocation){setLocStatus("denied");return;}
@@ -762,7 +759,7 @@ export default function App(){
         onSignOut={handleSignOut} userName={myUserName}/>
 
       {/* ホームタブ */}
-      <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"100dvh",display:tab===0?"flex":"none",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
+      {tab===0&&<div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"100dvh",display:"flex",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
           {/* 上バー */}
           <div style={{flexShrink:0,paddingTop:"env(safe-area-inset-top,44px)",background:"rgba(250,247,242,0.98)",borderBottom:"1px solid rgba(0,0,0,0.08)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 16px 0"}}>
@@ -788,19 +785,17 @@ export default function App(){
           </div>
           {/* 下バー */}
           <div style={{flexShrink:0,background:"rgba(250,247,242,0.98)",borderTop:"1px solid rgba(0,0,0,0.08)",display:"flex",alignItems:"center",padding:`10px 24px env(safe-area-inset-bottom,16px)`}}>
-            <button onClick={()=>{document.body.style.background="red";setTab(1);}} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,border:"none",background:"lime",cursor:"pointer",color:"#333"}}>
+            <button onClick={()=>setTab(1)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,border:"none",background:"none",cursor:"pointer",color:"#888"}}>
               <span style={{fontSize:18}}>📋</span>
               <span style={{fontSize:10,fontWeight:500,fontFamily:font}}>タイムライン</span>
             </button>
             <button onClick={()=>setShowCapture(true)} style={{width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:26,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",display:"flex",alignItems:"center",justifyContent:"center",marginLeft:"auto"}}>+</button>
           </div>
         </div>
-
-      {/* テスト: タブが1のとき青画面 */}
-      {tab===1&&<div style={{position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"blue",zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"yellow",fontSize:40,fontWeight:900}}>タイムライン</span></div>}
+      </div>}
 
       {/* タイムライン・マイページ */}
-      <div style={{position:"fixed",top:0,bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,display:tab!==0?"flex":"none",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
+      {tab!==0&&<div style={{position:"fixed",top:0,bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,display:"flex",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
           <div style={{flexShrink:0,paddingTop:"env(safe-area-inset-top,44px)",background:"white",borderBottom:"1px solid #eee8e0"}}>
             <div style={{padding:"6px 16px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <button onClick={()=>setTab(0)} style={{display:"flex",alignItems:"center",gap:4,border:"none",background:"none",cursor:"pointer",fontSize:13,color:"#6db85c",fontWeight:700,padding:0,fontFamily:font}}>‹ 地図</button>
@@ -890,7 +885,7 @@ export default function App(){
           {!showCapture&&!showAI&&!selected&&!showWeatherPanel&&!showProfile&&(
             <button onClick={()=>setShowCapture(true)} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px) + 22px)",right:18,width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:24,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",zIndex:50,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
           )}
-      </div>
+      </div>}
 
       {/* モーダル */}
       {selected&&<DetailModal item={selected} isOwn={myDiscoveries.some(d=>d.id===selected.id)} onClose={()=>setSelected(null)} onHeart={handleHeart} myHearts={myHearts} onUpdate={handleUpdate} onViewUser={(id,name)=>{setSelected(null);setProfileTarget({id,name});setShowProfile(true);}}/>}

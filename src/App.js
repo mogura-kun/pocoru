@@ -795,7 +795,6 @@ export default function App(){
             <button onClick={()=>setShowCapture(true)} style={{width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:26,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",display:"flex",alignItems:"center",justifyContent:"center",marginLeft:"auto"}}>+</button>
           </div>
         </div>
-      </div>
 
       {/* タイムライン・マイページ */}
       <div style={{position:"fixed",top:0,bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,display:tab!==0?"flex":"none",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>

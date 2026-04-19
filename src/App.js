@@ -797,8 +797,10 @@ export default function App(){
 
       {/* タイムライン・マイページ */}
       {tab!==0&&(
-        <>{console.log("DEBUG tab=",tab,"discoveries=",discoveries.length,"nearby=",nearby.length)}
-          <div style={{position:"sticky",top:0,zIndex:30,background:"white",borderBottom:"1px solid #eee8e0"}}>
+        <>
+          <div style={{position:"fixed",top:0,left:0,width:"100%",height:44,background:"red",zIndex:9999,color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13}}>DEBUG: tab={tab} disc={discoveries.length}</div>
+          <div style={{height:44}}/>
+          <div style={{position:"sticky",top:44,zIndex:30,background:"white",borderBottom:"1px solid #eee8e0"}}>
             <div style={{padding:"50px 16px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <button onClick={()=>setTab(0)} style={{display:"flex",alignItems:"center",gap:4,border:"none",background:"none",cursor:"pointer",fontSize:13,color:"#6db85c",fontWeight:700,padding:0,fontFamily:font}}>‹ 地図</button>
               <div style={{fontSize:17,fontWeight:800}}>{TABS[tab]}</div>

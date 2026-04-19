@@ -797,15 +797,15 @@ export default function App(){
 
       {/* タイムライン・マイページ */}
       {tab!==0&&(
-        <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"100dvh",display:"flex",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
-          <div style={{flexShrink:0,background:"white",borderBottom:"1px solid #eee8e0"}}>
+        <>
+          <div style={{position:"sticky",top:0,zIndex:30,background:"white",borderBottom:"1px solid #eee8e0"}}>
             <div style={{padding:"50px 16px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <button onClick={()=>setTab(0)} style={{display:"flex",alignItems:"center",gap:4,border:"none",background:"none",cursor:"pointer",fontSize:13,color:"#6db85c",fontWeight:700,padding:0,fontFamily:font}}>‹ 地図</button>
               <div style={{fontSize:17,fontWeight:800}}>{TABS[tab]}</div>
               <button onClick={()=>setMenuOpen(true)} style={{width:32,height:32,borderRadius:9,border:"none",background:"#f5f0ea",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>≡</button>
             </div>
           </div>
-          <div style={{flex:1,overflowY:"auto",paddingBottom:80}}>
+          <div style={{paddingBottom:80}}>
 
             {/* タイムライン */}
             {tab===1&&(
@@ -887,7 +887,7 @@ export default function App(){
           {!showCapture&&!showAI&&!selected&&!showWeatherPanel&&!showProfile&&(
             <button onClick={()=>setShowCapture(true)} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px) + 22px)",right:18,width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:24,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",zIndex:50,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
           )}
-        </div>
+        </>
       )}
 
       {/* モーダル */}

@@ -796,6 +796,9 @@ export default function App(){
           </div>
         </div>
 
+      {/* テスト: タブが1のとき青画面 */}
+      {tab===1&&<div style={{position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"blue",zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"yellow",fontSize:40,fontWeight:900}}>タイムライン</span></div>}
+
       {/* タイムライン・マイページ */}
       <div style={{position:"fixed",top:0,bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,display:tab!==0?"flex":"none",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
           <div style={{flexShrink:0,paddingTop:"env(safe-area-inset-top,44px)",background:"white",borderBottom:"1px solid #eee8e0"}}>

@@ -796,7 +796,7 @@ export default function App(){
 
       {/* タイムライン・マイページ */}
 
-      {tab!==0&&<div style={{position:"fixed",top:0,bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,display:"flex",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
+      {tab!==0&&<div style={{position:"fixed",inset:0,display:"flex",flexDirection:"column",zIndex:10,background:"#faf7f2",overflow:"hidden"}}>
           <div style={{flexShrink:0,paddingTop:"env(safe-area-inset-top,44px)",background:"white",borderBottom:"1px solid #eee8e0"}}>
             <div style={{padding:"6px 16px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <button onClick={()=>setTab(0)} style={{display:"flex",alignItems:"center",gap:4,border:"none",background:"none",cursor:"pointer",fontSize:13,color:"#6db85c",fontWeight:700,padding:0,fontFamily:font}}>‹ 地図</button>

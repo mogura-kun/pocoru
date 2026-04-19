@@ -654,21 +654,24 @@ export default function App(){
   // データ取得
   async function fetchAll(){
     try{
+      const token=sessionRef.current?.access_token;
       const since=new Date(Date.now()-5*24*3600000).toISOString();
-      const data=await supa(`discoveries?posted_at=gte.${since}&order=posted_at.desc&limit=500`);
+      const data=await supa(`discoveries?posted_at=gte.${since}&order=posted_at.desc&limit=500`,{},token);
       setDiscoveries(data||[]);
     }catch(e){console.error(e);}
   }
   async function fetchMy(uid){
     try{
-      const data=await supa(`discoveries?user_id=eq.${uid}&order=posted_at.desc&limit=1000`);
+      const token=sessionRef.current?.access_token;
+      const data=await supa(`discoveries?user_id=eq.${uid}&order=posted_at.desc&limit=1000`,{},token);
       setMyDiscoveries(data||[]);
     }catch(e){console.error(e);}
   }
   async function fetchWeather(){
     try{
+      const token=sessionRef.current?.access_token;
       const since=new Date(Date.now()-3*3600000).toISOString();
-      const data=await supa(`weather_reports?posted_at=gte.${since}&order=posted_at.desc&limit=50`);
+      const data=await supa(`weather_reports?posted_at=gte.${since}&order=posted_at.desc&limit=50`,{},token);
       setWeatherReports(data||[]);
     }catch(e){}
   }
@@ -692,12 +695,17 @@ export default function App(){
     const updated=[...myHearts,id];setMyHearts(updated);lsSet("myHearts",updated);
     setDiscoveries(prev=>prev.map(d=>d.id===id?{...d,hearts:(d.hearts||0)+1}:d));
     if(selected?.id===id)setSelected(s=>({...s,hearts:(s.hearts||0)+1}));
-    try{const cur=discoveries.find(d=>d.id===id);await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({hearts:(cur?.hearts||0)+1})});}catch{}
+    try{
+      const token=sessionRef.current?.access_token;
+      const cur=discoveries.find(d=>d.id===id);
+      await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({hearts:(cur?.hearts||0)+1})},token);
+    }catch{}
   }
 
   async function handleUpdate(id,updates){
     try{
-      await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify(updates)});
+      const token=sessionRef.current?.access_token;
+      await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify(updates)},token);
       setDiscoveries(prev=>prev.map(d=>d.id===id?{...d,...updates}:d));
       setMyDiscoveries(prev=>prev.map(d=>d.id===id?{...d,...updates}:d));
       if(selected?.id===id)setSelected(s=>({...s,...updates}));
@@ -711,8 +719,9 @@ export default function App(){
       const data=await res.json();if(data.content?.[0]?.text)msg=data.content[0].text;
     }catch{}
     try{
+      const token=sessionRef.current?.access_token;
       const row={note:note||"📷",category,emoji,photo:photo||null,photo_edit:photoEdit||null,weather:weather||null,lat:lat||null,lng:lng||null,ai_msg:msg,hearts:0,user_id:myUserId||null,user_name:myUserName||null,custom_time:customTime||null};
-      const saved=await supa("discoveries",{method:"POST",prefer:"return=representation",body:JSON.stringify(row)});
+      const saved=await supa("discoveries",{method:"POST",prefer:"return=representation",body:JSON.stringify(row)},token);
       const entry=Array.isArray(saved)?saved[0]:saved;
       setDiscoveries(prev=>[entry,...prev]);
       setMyDiscoveries(prev=>[entry,...prev]);
@@ -743,7 +752,7 @@ export default function App(){
   const stickyColors=["yellow","pink","blue","green","orange"];
 
   return(
-    <div style={{minHeight:"100dvh",background:"#faf7f2",fontFamily:font,color:"#3a3028",display:"flex",flexDirection:"column",maxWidth:430,margin:"0 auto"}}>
+    <div style={{height:"100dvh",background:"#faf7f2",fontFamily:font,color:"#3a3028",display:"flex",flexDirection:"column",maxWidth:430,margin:"0 auto"}}>
 
       <SlideMenu open={menuOpen} onClose={()=>setMenuOpen(false)} myCount={myDiscoveries.length} nearbyCount={nearby.length}
         onSetTab={setTab} onOpenProfile={()=>{setProfileTarget({id:null,name:null});setShowProfile(true);}}

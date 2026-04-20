@@ -654,24 +654,21 @@ export default function App(){
   // データ取得
   async function fetchAll(){
     try{
-      const token=sessionRef.current?.access_token;
       const since=new Date(Date.now()-5*24*3600000).toISOString();
-      const data=await supa(`discoveries?posted_at=gte.${since}&order=posted_at.desc&limit=500`,{},token);
+      const data=await supa(`discoveries?posted_at=gte.${since}&order=posted_at.desc&limit=500`);
       setDiscoveries(data||[]);
     }catch(e){console.error(e);}
   }
   async function fetchMy(uid){
     try{
-      const token=sessionRef.current?.access_token;
-      const data=await supa(`discoveries?user_id=eq.${uid}&order=posted_at.desc&limit=1000`,{},token);
+      const data=await supa(`discoveries?user_id=eq.${uid}&order=posted_at.desc&limit=1000`);
       setMyDiscoveries(data||[]);
     }catch(e){console.error(e);}
   }
   async function fetchWeather(){
     try{
-      const token=sessionRef.current?.access_token;
       const since=new Date(Date.now()-3*3600000).toISOString();
-      const data=await supa(`weather_reports?posted_at=gte.${since}&order=posted_at.desc&limit=50`,{},token);
+      const data=await supa(`weather_reports?posted_at=gte.${since}&order=posted_at.desc&limit=50`);
       setWeatherReports(data||[]);
     }catch(e){}
   }
@@ -695,17 +692,12 @@ export default function App(){
     const updated=[...myHearts,id];setMyHearts(updated);lsSet("myHearts",updated);
     setDiscoveries(prev=>prev.map(d=>d.id===id?{...d,hearts:(d.hearts||0)+1}:d));
     if(selected?.id===id)setSelected(s=>({...s,hearts:(s.hearts||0)+1}));
-    try{
-      const token=sessionRef.current?.access_token;
-      const cur=discoveries.find(d=>d.id===id);
-      await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({hearts:(cur?.hearts||0)+1})},token);
-    }catch{}
+    try{const cur=discoveries.find(d=>d.id===id);await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({hearts:(cur?.hearts||0)+1})});}catch{}
   }
 
   async function handleUpdate(id,updates){
     try{
-      const token=sessionRef.current?.access_token;
-      await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify(updates)},token);
+      await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify(updates)});
       setDiscoveries(prev=>prev.map(d=>d.id===id?{...d,...updates}:d));
       setMyDiscoveries(prev=>prev.map(d=>d.id===id?{...d,...updates}:d));
       if(selected?.id===id)setSelected(s=>({...s,...updates}));
@@ -719,9 +711,8 @@ export default function App(){
       const data=await res.json();if(data.content?.[0]?.text)msg=data.content[0].text;
     }catch{}
     try{
-      const token=sessionRef.current?.access_token;
       const row={note:note||"📷",category,emoji,photo:photo||null,photo_edit:photoEdit||null,weather:weather||null,lat:lat||null,lng:lng||null,ai_msg:msg,hearts:0,user_id:myUserId||null,user_name:myUserName||null,custom_time:customTime||null};
-      const saved=await supa("discoveries",{method:"POST",prefer:"return=representation",body:JSON.stringify(row)},token);
+      const saved=await supa("discoveries",{method:"POST",prefer:"return=representation",body:JSON.stringify(row)});
       const entry=Array.isArray(saved)?saved[0]:saved;
       setDiscoveries(prev=>[entry,...prev]);
       setMyDiscoveries(prev=>[entry,...prev]);
@@ -752,14 +743,15 @@ export default function App(){
   const stickyColors=["yellow","pink","blue","green","orange"];
 
   return(
-    <div style={{background:"#faf7f2",fontFamily:font,color:"#3a3028"}}>
+    <div style={{height:"100dvh",background:"#faf7f2",fontFamily:font,color:"#3a3028",display:"flex",flexDirection:"column",maxWidth:430,margin:"0 auto",overflow:"hidden"}}>
 
       <SlideMenu open={menuOpen} onClose={()=>setMenuOpen(false)} myCount={myDiscoveries.length} nearbyCount={nearby.length}
         onSetTab={setTab} onOpenProfile={()=>{setProfileTarget({id:null,name:null});setShowProfile(true);}}
         onSignOut={handleSignOut} userName={myUserName}/>
 
       {/* ホームタブ */}
-      {tab===0&&<div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"100dvh",display:"flex",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
+      {tab===0&&(
+        <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"100dvh",display:"flex",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
           {/* 上バー */}
           <div style={{flexShrink:0,paddingTop:"env(safe-area-inset-top,44px)",background:"rgba(250,247,242,0.98)",borderBottom:"1px solid rgba(0,0,0,0.08)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 16px 0"}}>
@@ -792,19 +784,19 @@ export default function App(){
             <button onClick={()=>setShowCapture(true)} style={{width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:26,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",display:"flex",alignItems:"center",justifyContent:"center",marginLeft:"auto"}}>+</button>
           </div>
         </div>
-      }
+      )}
 
       {/* タイムライン・マイページ */}
-
-      {tab!==0&&<div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"100dvh",display:"flex",flexDirection:"column",zIndex:10,background:"#faf7f2"}}>
-          <div style={{flexShrink:0,paddingTop:"env(safe-area-inset-top,44px)",background:"white",borderBottom:"1px solid #eee8e0"}}>
-            <div style={{padding:"6px 16px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      {tab!==0&&(
+        <>
+          <div style={{position:"sticky",top:0,zIndex:30,background:"white",borderBottom:"1px solid #eee8e0"}}>
+            <div style={{padding:"50px 16px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <button onClick={()=>setTab(0)} style={{display:"flex",alignItems:"center",gap:4,border:"none",background:"none",cursor:"pointer",fontSize:13,color:"#6db85c",fontWeight:700,padding:0,fontFamily:font}}>‹ 地図</button>
               <div style={{fontSize:17,fontWeight:800}}>{TABS[tab]}</div>
               <button onClick={()=>setMenuOpen(true)} style={{width:32,height:32,borderRadius:9,border:"none",background:"#f5f0ea",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>≡</button>
             </div>
           </div>
-          <div style={{flex:1,overflowY:"auto",minHeight:0,paddingBottom:80}}>
+          <div style={{flex:1,overflowY:"auto",paddingBottom:80,minHeight:0}}>
 
             {/* タイムライン */}
             {tab===1&&(
@@ -886,7 +878,8 @@ export default function App(){
           {!showCapture&&!showAI&&!selected&&!showWeatherPanel&&!showProfile&&(
             <button onClick={()=>setShowCapture(true)} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px) + 22px)",right:18,width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:24,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",zIndex:50,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
           )}
-      </div>}
+        </>
+      )}
 
       {/* モーダル */}
       {selected&&<DetailModal item={selected} isOwn={myDiscoveries.some(d=>d.id===selected.id)} onClose={()=>setSelected(null)} onHeart={handleHeart} myHearts={myHearts} onUpdate={handleUpdate} onViewUser={(id,name)=>{setSelected(null);setProfileTarget({id,name});setShowProfile(true);}}/>}

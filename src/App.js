@@ -271,7 +271,7 @@ function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater
   );
 }
 
-// 詳細モーダル: 編集ボタンで EditModal を開く
+// 詳細モーダル: z-index 350でProfileModalより上に表示、写真大きく
 function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onViewUser,onEdit}){
   const already=myHearts.includes(item.id);
   const age=Date.now()-new Date(item.posted_at).getTime();
@@ -280,7 +280,7 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
   const wEmoji=WEATHERS.find(w=>w.value===item.weather)?.emoji;
   const colors=["yellow","pink","blue","green","orange"];
   return(
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(58,48,40,0.5)",zIndex:300,display:"flex",alignItems:"flex-end"}}>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(58,48,40,0.5)",zIndex:350,display:"flex",alignItems:"flex-end"}}>
       <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#faf7f2",borderRadius:"28px 28px 0 0",padding:"22px 20px 48px",boxShadow:"0 -8px 40px rgba(0,0,0,0.15)",animation:"slideUp 0.3s ease",maxHeight:"90dvh",overflowY:"auto"}}>
         <div style={{width:40,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 18px"}}/>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
@@ -303,7 +303,19 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
             <button onClick={onClose} style={{width:28,height:28,borderRadius:"50%",border:"none",background:"#eee8e0",color:"#aaa",fontSize:14,cursor:"pointer"}}>×</button>
           </div>
         </div>
-        <div style={{display:"flex",justifyContent:"center",marginBottom:12,opacity:op}}><Polaroid photo={item.photo} emoji={item.emoji} category={item.category} rotate={-1.5}/></div>
+        {/* 写真: 大きく表示 */}
+        <div style={{marginBottom:12,opacity:op}}>
+          {item.photo
+            ?<div style={{background:"white",padding:"8px 8px 32px",boxShadow:"0 4px 20px rgba(0,0,0,0.18)",borderRadius:2,transform:"rotate(-1deg)"}}>
+                <img src={item.photo} alt="" style={{width:"100%",height:240,objectFit:"cover",display:"block",borderRadius:1}}/>
+              </div>
+            :<div style={{display:"flex",justifyContent:"center",padding:"16px 0"}}>
+                <div style={{width:100,height:100,borderRadius:"50%",background:getBg(getColor(item)),display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <MotifIcon motif={item.category} color={getColor(item)} size={56} shadow/>
+                </div>
+              </div>
+          }
+        </div>
         <div style={{marginBottom:12,opacity:op}}><StickyNote text={item.note} colorKey={colors[Math.abs((item.id||"").charCodeAt?.(0)||0)%5]} rotate={-1}/></div>
         <div style={{background:getBg(getColor(item)),borderRadius:13,padding:"11px 13px",marginBottom:16,borderLeft:`4px solid ${getColor(item)}`}}>
           <div style={{fontSize:10,color:getColor(item),fontWeight:700,letterSpacing:1,marginBottom:3,fontFamily:font}}>✦ ひとこと</div>
@@ -776,8 +788,7 @@ const SEL_FIELDS="id,note,category,emoji,photo,weather,lat,lng,ai_msg,hearts,use
 export default function App(){
   const [tab,setTab]=useState(0);
   const [discoveries,setDiscoveries]=useState([]);
-  const [timelineDisc,setTimelineDisc]=useState([]);
-  const [timelineDate,setTimelineDate]=useState(todayStr());
+  const [followingPosts,setFollowingPosts]=useState([]);
   const [myDiscoveries,setMyDiscoveries]=useState([]);
   const [weatherReports,setWeatherReports]=useState([]);
   const [selected,setSelected]=useState(null);
@@ -853,14 +864,15 @@ export default function App(){
       setDiscoveries(data||[]);
     }catch(e){console.error(e);}
   }
-  async function fetchTimeline(dateStr){
+  async function fetchFollowingPosts(uid){
     try{
-      const end=new Date(dateStr+"T23:59:59");
-      const since=new Date(end.getTime()-7*24*3600000).toISOString();
-      const until=end.toISOString();
-      const data=await supa(`discoveries?posted_at=gte.${since}&posted_at=lte.${until}&order=posted_at.desc&limit=300&select=${SEL_FIELDS}`);
-      setTimelineDisc(data||[]);
-    }catch(e){console.error(e);}
+      const follows=await supa(`follows?follower_id=eq.${uid}&select=following_id`);
+      const ids=(follows||[]).map(f=>f.following_id).filter(Boolean);
+      if(!ids.length){setFollowingPosts([]);return;}
+      const since=new Date(Date.now()-7*24*3600000).toISOString();
+      const data=await supa(`discoveries?user_id=in.(${ids.join(',')})&posted_at=gte.${since}&order=posted_at.desc&limit=200&select=${SEL_FIELDS}`);
+      setFollowingPosts(data||[]);
+    }catch{setFollowingPosts([]);}
   }
   async function fetchMy(uid){
     try{
@@ -878,30 +890,28 @@ export default function App(){
 
   useEffect(()=>{
     if(!authReady)return;
-    fetchAll();fetchWeather();fetchTimeline(timelineDate);
-    if(myUserId)fetchMy(myUserId);
+    fetchAll();fetchWeather();
+    if(myUserId){fetchMy(myUserId);fetchFollowingPosts(myUserId);}
     const t1=setInterval(fetchAll,180000),t2=setInterval(fetchWeather,300000);
     return()=>{clearInterval(t1);clearInterval(t2);};
   },[authReady,myUserId]);
-
-  useEffect(()=>{if(authReady)fetchTimeline(timelineDate);},[timelineDate]);
 
   const nearby=discoveries.filter(d=>{if(!userLocation)return true;if(!d.lat||!d.lng)return true;return haversine(userLocation.lat,userLocation.lng,d.lat,d.lng)<=5;});
   function toggleCat(v){setVisibleCats(prev=>prev.includes(v)?prev.length>1?prev.filter(x=>x!==v):prev:[...prev,v]);}
 
   async function handleHeart(id){
     const updated=[...myHearts,id];setMyHearts(updated);lsSet("myHearts",updated);
-    setDiscoveries(prev=>prev.map(d=>d.id===id?{...d,hearts:(d.hearts||0)+1}:d));
-    setTimelineDisc(prev=>prev.map(d=>d.id===id?{...d,hearts:(d.hearts||0)+1}:d));
+    const upd=prev=>prev.map(d=>d.id===id?{...d,hearts:(d.hearts||0)+1}:d);
+    setDiscoveries(upd);setFollowingPosts(upd);
     if(selected?.id===id)setSelected(s=>({...s,hearts:(s.hearts||0)+1}));
-    try{const cur=discoveries.find(d=>d.id===id)||timelineDisc.find(d=>d.id===id);await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({hearts:(cur?.hearts||0)+1})});}catch{}
+    try{const cur=[...discoveries,...followingPosts].find(d=>d.id===id);await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({hearts:(cur?.hearts||0)+1})});}catch{}
   }
 
   async function handleUpdate(id,updates){
     try{
       await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify(updates)});
       const upd=d=>d.id===id?{...d,...updates}:d;
-      setDiscoveries(prev=>prev.map(upd));setTimelineDisc(prev=>prev.map(upd));setMyDiscoveries(prev=>prev.map(upd));
+      setDiscoveries(prev=>prev.map(upd));setFollowingPosts(prev=>prev.map(upd));setMyDiscoveries(prev=>prev.map(upd));
       if(selected?.id===id)setSelected(s=>({...s,...updates}));
     }catch(e){alert("保存失敗: "+e.message);}
   }
@@ -910,7 +920,7 @@ export default function App(){
     try{
       await supa(`discoveries?id=eq.${id}`,{method:"DELETE",prefer:"return=minimal"});
       const flt=prev=>prev.filter(d=>d.id!==id);
-      setDiscoveries(flt);setTimelineDisc(flt);setMyDiscoveries(flt);
+      setDiscoveries(flt);setFollowingPosts(flt);setMyDiscoveries(flt);
       setSelected(null);setEditTarget(null);
     }catch(e){alert("削除失敗: "+e.message);}
   }
@@ -948,7 +958,11 @@ export default function App(){
   if(!authReady)return <div style={{minHeight:"100dvh",background:"#faf7f2",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12,fontFamily:font}}><div style={{fontSize:44}}>🌱</div><div style={{fontSize:12,color:"#aaa"}}>読み込み中…</div></div>;
   if(!myUserId)return <LoginScreen/>;
 
-  const timelineItems=timelineDisc.filter(d=>visibleCats.includes(d.category)).filter(d=>{if(!userLocation)return true;if(!d.lat||!d.lng)return true;return haversine(userLocation.lat,userLocation.lng,d.lat,d.lng)<=5;});
+  // タイムライン: 5km圏内 + フォローユーザーの投稿（重複排除・時系列）
+  const timelineItems=[
+    ...nearby,
+    ...followingPosts.filter(d=>!nearby.find(n=>n.id===d.id)),
+  ].filter(d=>visibleCats.includes(d.category)).sort((a,b)=>new Date(b.posted_at)-new Date(a.posted_at));
   const memoryItems=myDiscoveries.filter(d=>visibleCats.includes(d.category));
   const TABS=["ホーム","タイムライン","思い出"];
 
@@ -1000,14 +1014,6 @@ export default function App(){
               <div style={{fontSize:17,fontWeight:800}}>{TABS[tab]}</div>
               <button onClick={()=>setMenuOpen(true)} style={{width:32,height:32,borderRadius:9,border:"none",background:"#f5f0ea",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>≡</button>
             </div>
-            {/* タイムライン: 日付指定 */}
-            {tab===1&&(
-              <div style={{padding:"0 12px 8px",display:"flex",alignItems:"center",gap:8}}>
-                <span style={{fontSize:11,color:"#888",fontFamily:font,flexShrink:0}}>表示期間</span>
-                <input type="date" value={timelineDate} max={todayStr()} onChange={e=>setTimelineDate(e.target.value)} style={{flex:1,padding:"5px 9px",borderRadius:9,border:"1px solid #e8e0d8",fontSize:12,fontFamily:font,outline:"none",color:"#3a3028"}}/>
-                <span style={{fontSize:11,color:"#6db85c",fontFamily:font,fontWeight:600,flexShrink:0}}>の1週間</span>
-              </div>
-            )}
             <div style={{display:"flex",gap:5,padding:"0 12px 10px",overflowX:"auto"}}>
               {CATEGORIES.map(c=>{const on=visibleCats.includes(c.value);return <button key={c.value} onClick={()=>toggleCat(c.value)} style={{flexShrink:0,width:30,height:30,borderRadius:9,border:"none",cursor:"pointer",background:on?"white":"rgba(0,0,0,0.06)",opacity:on?1:0.5,boxShadow:on?"0 1px 4px rgba(0,0,0,0.12)":"none",display:"flex",alignItems:"center",justifyContent:"center"}}><MotifIcon motif={c.value} color={on?c.defaultColor:"#aaa"} size={16}/></button>;})}
             </div>

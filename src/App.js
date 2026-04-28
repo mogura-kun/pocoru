@@ -6,7 +6,6 @@ const AUTH_URL = `${SUPA_URL}/auth/v1`;
 const APP_URL  = "https://discover-app-psi.vercel.app";
 const font     = "'Hiragino Maru Gothic Pro','Noto Sans JP',sans-serif";
 
-// ── Supabase REST ────────────────────────────────────────────────────────────
 async function supa(path, opts={}, token=null){
   const res = await fetch(`${SUPA_URL}/rest/v1/${path}`,{
     headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${token||SUPA_KEY}`,"Content-Type":"application/json","Prefer":opts.prefer||""},
@@ -18,7 +17,6 @@ async function supa(path, opts={}, token=null){
   return t?JSON.parse(t):null;
 }
 
-// ── Supabase Storage upload ───────────────────────────────────────────────────
 async function uploadPhoto(dataUrl, token){
   const commaIdx=dataUrl.indexOf(",");
   const meta=dataUrl.slice(0,commaIdx);
@@ -39,7 +37,6 @@ async function uploadPhoto(dataUrl, token){
   return `${SUPA_URL}/storage/v1/object/public/photos/${path}`;
 }
 
-// ── Auth helpers ─────────────────────────────────────────────────────────────
 function getSession(){try{return JSON.parse(localStorage.getItem("sb_sess")||"null");}catch{return null;}}
 function saveSession(s){if(s)localStorage.setItem("sb_sess",JSON.stringify(s));else localStorage.removeItem("sb_sess");}
 function lsGet(k,d=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
@@ -61,7 +58,6 @@ async function googleLogout(token){
   saveSession(null);
 }
 
-// ── Leaflet loader ───────────────────────────────────────────────────────────
 function useLeaflet(cb){
   useEffect(()=>{
     if(window.L){cb();return;}
@@ -70,7 +66,6 @@ function useLeaflet(cb){
   },[]);
 }
 
-// ── 定数 ────────────────────────────────────────────────────────────────────
 const CATEGORIES=[
   {value:"flower", label:"花",     defaultColor:"#e06080"},
   {value:"bird",   label:"鳥",     defaultColor:"#4a9cc7"},
@@ -89,22 +84,26 @@ function getBg(color){
   const r=parseInt(color.slice(1,3),16),g=parseInt(color.slice(3,5),16),b=parseInt(color.slice(5,7),16);
   return`rgba(${r},${g},${b},0.13)`;
 }
+
+// 改良済みモチーフSVG
 const MOTIF_SVG={
-  flower:`<circle cx="12" cy="5.5" r="2.5"/><circle cx="16.7" cy="8.5" r="2.5"/><circle cx="16.7" cy="15.5" r="2.5"/><circle cx="12" cy="18.5" r="2.5"/><circle cx="7.3" cy="15.5" r="2.5"/><circle cx="7.3" cy="8.5" r="2.5"/><circle cx="12" cy="12" r="3"/>`,
-  bird:`<path d="M3 9C5.5 6.5 9.5 7 11.5 10C13.5 7 17.5 5 22 7C20 10 16.5 11 14.5 10C14.5 13 12.5 15.5 10 15.5C8 15.5 6 14.5 5 13L3 14C3 11.5 3 10 3 9Z"/>`,
+  flower:`<ellipse cx="12" cy="6" rx="2.2" ry="3.8"/><ellipse cx="12" cy="6" rx="2.2" ry="3.8" transform="rotate(60 12 12)"/><ellipse cx="12" cy="6" rx="2.2" ry="3.8" transform="rotate(120 12 12)"/><ellipse cx="12" cy="6" rx="2.2" ry="3.8" transform="rotate(180 12 12)"/><ellipse cx="12" cy="6" rx="2.2" ry="3.8" transform="rotate(240 12 12)"/><ellipse cx="12" cy="6" rx="2.2" ry="3.8" transform="rotate(300 12 12)"/><circle cx="12" cy="12" r="3.8"/>`,
+  bird:`<path d="M12 7C9.5 7 7 8 5 10C6.5 9.5 8 9.5 9.5 10.5C8 10.5 6.5 11.5 6 13C7.5 12 9.5 12 11 13C10.5 14.5 10.5 16 11.5 17L12 15.5L12.5 17C13.5 16 13.5 14.5 13 13C14.5 12 16.5 12 18 13C17.5 11.5 16 10.5 14.5 10.5C16 9.5 17.5 9.5 19 10C17 8 14.5 7 12 7Z"/>`,
   fish:`<ellipse cx="10" cy="12" rx="6.5" ry="4"/><path d="M16.5 12L22 8.5V15.5Z"/><circle cx="8" cy="11" r="1" fill="white"/>`,
   cloud:`<path d="M18 17H6C4.1 17 2.5 15.4 2.5 13.5C2.5 11.8 3.7 10.3 5.4 10C5.1 9.4 5 8.7 5 8C5 5.5 7 3.5 9.5 3.5C10.9 3.5 12.2 4.1 13.1 5.1C13.6 4.9 14.3 4.7 15 4.7C17.5 4.7 19.5 6.7 19.5 9.2C19.5 9.4 19.5 9.6 19.4 9.7C20.7 10.2 21.5 11.4 21.5 12.8C21.5 15.1 19.9 17 18 17Z"/>`,
   plane:`<path d="M22 12L4 5L8 12L4 19L22 12Z"/>`,
   music:`<path d="M9 17C9 18.7 7.7 20 6 20C4.3 20 3 18.7 3 17C3 15.3 4.3 14 6 14C6.8 14 7.5 14.3 8 14.8V6L20 3V13C20 14.7 18.7 16 17 16C15.3 16 14 14.7 14 13C14 11.3 15.3 10 17 10C17.8 10 18.5 10.3 19 10.8V5.8L9 8.1V17Z"/>`,
   sparkle:`<path d="M12 2L13.8 9L21 11L13.8 13L12 20L10.2 13L3 11L10.2 9Z"/><path d="M19 2L19.8 4.8L22.5 5.5L19.8 6.2L19 9L18.2 6.2L15.5 5.5L18.2 4.8Z"/>`,
-  bread:`<path d="M5 10C5 7.2 8.1 5 12 5C15.9 5 19 7.2 19 10V18C19 19.1 18.1 20 17 20H7C5.9 20 5 19.1 5 18V10Z"/><path d="M8.5 9.5C9.5 8.2 11 7.8 12 9.5C13 7.8 14.5 8.2 15.5 9.5" fill="none" stroke="white" stroke-width="1.3" stroke-linecap="round"/>`,
+  bread:`<path d="M4.5 12C4.5 8 7.8 5.5 12 5.5C16.2 5.5 19.5 8 19.5 12C19.5 14.5 18 16.5 15.5 17.5L12 18.5L8.5 17.5C6 16.5 4.5 14.5 4.5 12Z"/><path d="M8.5 10C9.5 8.8 10.7 8.2 12 8.2C13.3 8.2 14.5 8.8 15.5 10" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>`,
 };
+
 function MotifIcon({motif,color,size=24,shadow=false}){
   const s=MOTIF_SVG[motif]||MOTIF_SVG.sparkle;
   return(
     <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={{filter:shadow?`drop-shadow(0 2px 4px ${color}88)`:"none",flexShrink:0,display:"block"}} dangerouslySetInnerHTML={{__html:s}}/>
   );
 }
+
 const WEATHERS=[
   {value:"sunny",emoji:"☀️"},{value:"cloudy",emoji:"☁️"},{value:"rainy",emoji:"🌧️"},
   {value:"snowy",emoji:"❄️"},{value:"windy",emoji:"🌬️"},{value:"rainbow",emoji:"🌈"},
@@ -113,7 +112,6 @@ function haversine(la1,lo1,la2,lo2){const d=(v)=>v*Math.PI/180;const a=Math.sin(
 function jitter(v){return v+(Math.random()-0.5)*0.00009;}
 function roundTimeStr(date){const d=date instanceof Date?date:new Date(date);if(isNaN(d))return"";const h=d.getHours(),m=d.getMinutes(),rm=m<30?0:30;return`${String(h).padStart(2,"0")}:${String(rm).padStart(2,"0")}ごろ`;}
 
-// ── 小コンポーネント ─────────────────────────────────────────────────────────
 function Polaroid({photo,emoji,category,rotate=0,small=false}){
   const w=small?100:155,h=small?82:125;
   const color=emoji&&emoji.startsWith("#")?emoji:getDefaultColor(category);
@@ -124,6 +122,7 @@ function Polaroid({photo,emoji,category,rotate=0,small=false}){
     </div>
   );
 }
+
 function StickyNote({text,colorKey="yellow",rotate=0}){
   const C={yellow:"#fef08a",pink:"#fda4af",blue:"#bae6fd",green:"#bbf7d0",orange:"#fed7aa"};
   return(
@@ -134,7 +133,7 @@ function StickyNote({text,colorKey="yellow",rotate=0}){
   );
 }
 
-// ── PinEditMap ───────────────────────────────────────────────────────────────
+// PinEditMap: lat/lng props 変更で地図が動くよう修正
 function PinEditMap({lat,lng,onMove}){
   const mRef=useRef(null),iRef=useRef(null),mkRef=useRef(null);
   const [rdy,setRdy]=useState(false);
@@ -149,6 +148,19 @@ function PinEditMap({lat,lng,onMove}){
     mkRef.current.on("dragend",e=>{const p=e.target.getLatLng();onMove(p.lat,p.lng);});
     iRef.current.on("click",e=>{mkRef.current.setLatLng(e.latlng);onMove(e.latlng.lat,e.latlng.lng);});
   },[rdy]);
+
+  // 検索で lat/lng が変わったら地図・ピンを更新
+  const prevLatRef=useRef(lat);
+  const prevLngRef=useRef(lng);
+  useEffect(()=>{
+    if(!iRef.current||!mkRef.current)return;
+    if(lat===prevLatRef.current&&lng===prevLngRef.current)return;
+    prevLatRef.current=lat;
+    prevLngRef.current=lng;
+    mkRef.current.setLatLng([lat,lng]);
+    iRef.current.setView([lat,lng],15,{animate:true});
+  },[lat,lng]);
+
   return(
     <div style={{borderRadius:12,overflow:"hidden",height:160,position:"relative"}}>
       <div ref={mRef} style={{width:"100%",height:"100%"}}/>
@@ -157,7 +169,7 @@ function PinEditMap({lat,lng,onMove}){
   );
 }
 
-// ── LiveMap ──────────────────────────────────────────────────────────────────
+// LiveMap: 地図ピンは吹き出しなし・モチーフをそのまま表示
 function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick,centerMeRef}){
   const mRef=useRef(null),iRef=useRef(null),dMk=useRef([]),uMk=useRef(null),uCi=useRef(null),wMk=useRef([]);
   const [rdy,setRdy]=useState(false);
@@ -182,10 +194,16 @@ function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick
     dMk.current.forEach(m=>m.remove());dMk.current=[];
     discoveries.filter(d=>d.lat&&d.lng&&visibleCats.includes(d.category)).forEach(d=>{
       const age=Date.now()-new Date(d.posted_at).getTime();
-      const op=Math.max(0.25,1-(age/(5*24*3600000))*0.75);
+      const op=Math.max(0.3,1-(age/(7*24*3600000))*0.7);
       const color=getColor(d);
       const svgInner=MOTIF_SVG[d.category]||MOTIF_SVG.sparkle;
-      const icon=L.divIcon({className:"",html:`<div style="opacity:${op};position:relative;width:44px;height:52px"><div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:40px;height:34px;background:white;border-radius:13px;border:2.5px solid ${color};box-shadow:0 3px 10px rgba(0,0,0,0.16);display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="${color}">${svgInner}</svg></div><div style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid ${color}"></div></div>`,iconSize:[44,52],iconAnchor:[22,52]});
+      // 吹き出しなし・モチーフをそのまま表示
+      const icon=L.divIcon({
+        className:"",
+        html:`<div style="opacity:${op};width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="38" height="38" viewBox="0 0 24 24" fill="${color}" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,0.45))">${svgInner}</svg></div>`,
+        iconSize:[44,44],
+        iconAnchor:[22,22],
+      });
       dMk.current.push(L.marker([d.lat,d.lng],{icon}).addTo(iRef.current).on("click",()=>onPinClick(d)));
     });
   },[rdy,discoveries,visibleCats,userLocation]);
@@ -209,21 +227,27 @@ function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick
   );
 }
 
-// ── SlideMenu ────────────────────────────────────────────────────────────────
-function SlideMenu({open,onClose,myCount,onSetTab,onOpenProfile,onSignOut,onCaptureLater,userName}){
+// スライドメニュー更新: タイムライン/思い出/マイページ
+function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater,userName,avatarUrl}){
   return(
     <>
       {open&&<div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:200}}/>}
       <div style={{position:"fixed",top:0,right:0,bottom:0,width:260,background:"#faf7f2",zIndex:201,transform:open?"translateX(0)":"translateX(100%)",transition:"transform 0.3s cubic-bezier(0.4,0,0.2,1)",boxShadow:"-4px 0 24px rgba(0,0,0,0.12)",display:"flex",flexDirection:"column"}}>
-        <div style={{padding:"52px 20px 16px",borderBottom:"1px solid #eee8e0"}}>
-          <div style={{fontSize:20,fontWeight:800,fontFamily:font}}>メニュー</div>
-          <div style={{fontSize:11,color:"#6db85c",marginTop:3,fontFamily:font,fontWeight:600}}>👤 {userName||"ゲスト"}</div>
+        <div style={{padding:"52px 20px 16px",borderBottom:"1px solid #eee8e0",display:"flex",alignItems:"center",gap:12}}>
+          <div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",background:"#e8f5e3",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            {avatarUrl?<img src={avatarUrl} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:22}}>👤</span>}
+          </div>
+          <div>
+            <div style={{fontSize:16,fontWeight:800,fontFamily:font}}>{userName||"ゲスト"}</div>
+            <div style={{fontSize:11,color:"#6db85c",fontFamily:font}}>pocoru</div>
+          </div>
         </div>
         <div style={{flex:1,padding:"8px 0",overflowY:"auto"}}>
           {[
+            {emoji:"🗒️",label:"タイムライン",sub:"近くの発見 1週間",action:()=>{onClose();onSetTab(1);}},
+            {emoji:"📖",label:"思い出",sub:"自分の発見・永久保存",action:()=>{onClose();onSetTab(2);}},
+            {emoji:"👤",label:"マイページ",sub:"他の人から見た自分",action:()=>{onClose();onOpenProfile();}},
             {emoji:"🕐",label:"後から投稿",sub:"日時・場所を指定して投稿",action:()=>{onClose();onCaptureLater();}},
-            {emoji:"📖",label:"思い出",sub:`みんなの発見 ${myCount}件`,action:()=>{onClose();onSetTab(1);}},
-            {emoji:"🗒️",label:"マイページ",sub:"自分の投稿を見る",action:()=>{onClose();onOpenProfile();}},
           ].map((m,i)=>(
             <button key={i} onClick={m.action||onClose} style={{width:"100%",padding:"13px 20px",border:"none",background:"transparent",textAlign:"left",cursor:"pointer",display:"flex",alignItems:"center",gap:12,fontFamily:font}}>
               <span style={{fontSize:18}}>{m.emoji}</span>
@@ -231,7 +255,8 @@ function SlideMenu({open,onClose,myCount,onSetTab,onOpenProfile,onSignOut,onCapt
             </button>
           ))}
         </div>
-        <div style={{padding:"14px 20px",paddingBottom:"max(14px,env(safe-area-inset-bottom))",borderTop:"1px solid #eee8e0"}}>
+        <div style={{padding:"14px 20px",paddingBottom:"max(14px,env(safe-area-inset-bottom))",borderTop:"1px solid #eee8e0",display:"flex",flexDirection:"column",gap:8}}>
+          <button onClick={onSignOut} style={{width:"100%",padding:"10px 0",borderRadius:13,border:"1px solid #fca5a5",background:"white",color:"#ef4444",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:font}}>ログアウト</button>
           <button onClick={onClose} style={{width:"100%",padding:"11px 0",borderRadius:13,border:"none",background:"#6db85c",color:"white",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:font}}>閉じる</button>
         </div>
       </div>
@@ -239,13 +264,11 @@ function SlideMenu({open,onClose,myCount,onSetTab,onOpenProfile,onSignOut,onCapt
   );
 }
 
-// ── DetailModal ──────────────────────────────────────────────────────────────
 function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onViewUser}){
   const already=myHearts.includes(item.id);
   const age=Date.now()-new Date(item.posted_at).getTime();
-  const hoursAgo=Math.floor(age/3600000);
   const timeStr=item.custom_time?`${new Date(item.custom_time).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"})} ${roundTimeStr(new Date(item.custom_time))}`:roundTimeStr(new Date(item.posted_at));
-  const op=Math.max(0.3,1-(age/(5*24*3600000))*0.7);
+  const op=Math.max(0.3,1-(age/(7*24*3600000))*0.7);
   const wEmoji=WEATHERS.find(w=>w.value===item.weather)?.emoji;
   const [showEdit,setShowEdit]=useState(false);
   const [editTime,setEditTime]=useState(item.custom_time||"");
@@ -264,7 +287,12 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
             <div>
               <div style={{fontSize:12,fontWeight:700,color:getColor(item),fontFamily:font}}>{cl(item.category)}</div>
               <div style={{fontSize:11,color:"#bbb",fontFamily:font}}>{timeStr}{wEmoji&&<span style={{marginLeft:5}}>{wEmoji}</span>}</div>
-              {item.user_name&&!isOwn&&<button onClick={()=>{onClose();onViewUser(item.user_id,item.user_name);}} style={{border:"none",background:"none",cursor:"pointer",fontSize:11,color:"#6db85c",fontFamily:font,padding:0,marginTop:2}}>👤 {item.user_name}</button>}
+              {item.user_name&&!isOwn&&(
+                <button onClick={()=>{onClose();onViewUser(item.user_id,item.user_name);}} style={{border:"none",background:"none",cursor:"pointer",fontSize:11,color:"#6db85c",fontFamily:font,padding:0,marginTop:2,display:"flex",alignItems:"center",gap:4}}>
+                  {item.user_avatar?<img src={item.user_avatar} alt="" style={{width:16,height:16,borderRadius:"50%",objectFit:"cover"}}/>:<span>👤</span>}
+                  {item.user_name}
+                </button>
+              )}
             </div>
           </div>
           <div style={{display:"flex",gap:6}}>
@@ -291,18 +319,17 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
           <span style={{fontSize:26,transform:already?"scale(1.2)":"scale(1)",transition:"transform 0.2s"}}>{already?"❤️":"🤍"}</span>
           <div style={{textAlign:"left"}}><div style={{fontSize:14,fontWeight:700,color:already?"#e06080":"#888",fontFamily:font}}>{already?"ありがとう":"いいね"}</div><div style={{fontSize:11,color:"#bbb",fontFamily:font}}>{item.hearts||0}人が共感</div></div>
         </button>
-        <div style={{textAlign:"center",marginTop:10,fontSize:10,color:"#ccc",fontFamily:font}}>あと{Math.max(0,Math.ceil((5*24*3600000-age)/3600000))}時間で消えます</div>
       </div>
     </div>
   );
 }
 
-// ── WeatherPanel ─────────────────────────────────────────────────────────────
 function WeatherPanel({userLocation,onPost,onClose}){
   const [sel,setSel]=useState(null);
   const [photo,setPhoto]=useState(null);
   const [posting,setPosting]=useState(false);
-  const photoRef=useRef(null);
+  const cameraRef=useRef(null);
+  const albumRef=useRef(null);
   function handlePhoto(e){const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=ev=>setPhoto(ev.target.result);r.readAsDataURL(f);}
   async function post(){
     if(!sel)return;setPosting(true);
@@ -330,9 +357,10 @@ function WeatherPanel({userLocation,onPost,onClose}){
         <div style={{marginBottom:12}}>
           {photo?<div style={{position:"relative"}}><img src={photo} alt="" style={{width:"100%",height:100,objectFit:"cover",borderRadius:10}}/><button onClick={()=>setPhoto(null)} style={{position:"absolute",top:4,right:4,width:22,height:22,borderRadius:"50%",border:"none",background:"rgba(0,0,0,0.5)",color:"white",fontSize:11,cursor:"pointer"}}>×</button></div>
             :<div style={{display:"flex",gap:7}}>
-              <button onClick={()=>{photoRef.current.setAttribute("capture","environment");photoRef.current.click();}} style={{flex:1,padding:"9px 0",borderRadius:10,border:"1.5px dashed #c8e0b8",background:"#f4faf0",color:"#6db85c",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:font}}>📷 カメラ</button>
-              <button onClick={()=>{photoRef.current.removeAttribute("capture");photoRef.current.click();}} style={{flex:1,padding:"9px 0",borderRadius:10,border:"1.5px dashed #c8e0b8",background:"#f4faf0",color:"#6db85c",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:font}}>🖼️ アルバム</button>
-              <input ref={photoRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
+              <button onClick={()=>cameraRef.current?.click()} style={{flex:1,padding:"9px 0",borderRadius:10,border:"1.5px dashed #c8e0b8",background:"#f4faf0",color:"#6db85c",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:font}}>📷 カメラ</button>
+              <button onClick={()=>albumRef.current?.click()} style={{flex:1,padding:"9px 0",borderRadius:10,border:"1.5px dashed #c8e0b8",background:"#f4faf0",color:"#6db85c",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:font}}>🖼️ アルバム</button>
+              <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{display:"none"}}/>
+              <input ref={albumRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
             </div>
           }
         </div>
@@ -344,23 +372,42 @@ function WeatherPanel({userLocation,onPost,onClose}){
   );
 }
 
-// ── ProfileModal ─────────────────────────────────────────────────────────────
-function ProfileModal({myUserId,myUserName,targetUserId,targetUserName,discoveries,token,onClose}){
+// ProfileModal: アバター設定・フォロー一覧・コルクボード表示
+function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,discoveries,token,onClose,onViewUser}){
   const isMe=!targetUserId||targetUserId===myUserId;
   const userId=isMe?myUserId:targetUserId;
   const userName=isMe?myUserName:targetUserName;
   const [editName,setEditName]=useState(myUserName||"");
   const [savingName,setSavingName]=useState(false);
+  const [avatarUrl,setAvatarUrl]=useState(isMe?myAvatar:null);
+  const avatarInputRef=useRef(null);
   const [followers,setFollowers]=useState([]);
   const [following,setFollowing]=useState([]);
   const [isFollowing,setIsFollowing]=useState(false);
   const [loadingFollow,setLoadingFollow]=useState(false);
+  const [showFollowList,setShowFollowList]=useState(null); // null|'followers'|'following'
+  const [followUsers,setFollowUsers]=useState([]);
+  const stickyColors=["yellow","pink","blue","green","orange"];
+
   useEffect(()=>{
     if(!userId)return;
     supa(`follows?following_id=eq.${userId}`).then(d=>setFollowers(d||[])).catch(()=>{});
     supa(`follows?follower_id=eq.${userId}`).then(d=>setFollowing(d||[])).catch(()=>{});
     if(!isMe&&myUserId)supa(`follows?follower_id=eq.${myUserId}&following_id=eq.${userId}`).then(d=>setIsFollowing((d||[]).length>0)).catch(()=>{});
+    if(!isMe)supa(`users?id=eq.${userId}&select=avatar_url`).then(d=>{if(d&&d[0]?.avatar_url)setAvatarUrl(d[0].avatar_url);}).catch(()=>{});
   },[userId]);
+
+  async function loadFollowUsers(type){
+    const list=type==='followers'?followers:following;
+    const ids=list.map(f=>type==='followers'?f.follower_id:f.following_id).filter(Boolean);
+    if(ids.length===0){setFollowUsers([]);setShowFollowList(type);return;}
+    try{
+      const data=await supa(`users?id=in.(${ids.join(',')})&select=id,name,avatar_url`);
+      setFollowUsers(data||[]);
+    }catch{setFollowUsers([]);}
+    setShowFollowList(type);
+  }
+
   async function toggleFollow(){
     if(!myUserId||loadingFollow)return;setLoadingFollow(true);
     try{
@@ -369,55 +416,151 @@ function ProfileModal({myUserId,myUserName,targetUserId,targetUserName,discoveri
     }catch(e){alert(e.message);}
     setLoadingFollow(false);
   }
+
   async function saveName(){
     if(!editName.trim()||!myUserId)return;setSavingName(true);
-    try{await supa(`users?id=eq.${myUserId}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({name:editName.trim()})},token);lsSet("userName",editName.trim());}
-    catch(e){alert(e.message);}
+    try{
+      await supa(`users?id=eq.${myUserId}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({name:editName.trim()})},token);
+      lsSet("userName",editName.trim());
+    }catch(e){alert(e.message);}
     setSavingName(false);
   }
+
+  async function handleAvatarUpload(e){
+    const f=e.target.files?.[0];if(!f)return;
+    const reader=new FileReader();
+    reader.onload=async ev=>{
+      try{
+        const url=await uploadPhoto(ev.target.result,token);
+        await supa(`users?id=eq.${myUserId}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({avatar_url:url})},token);
+        setAvatarUrl(url);
+        lsSet("myAvatar",url);
+      }catch(e){alert("アバター更新失敗: "+e.message);}
+    };
+    reader.readAsDataURL(f);
+  }
+
   const userDisc=discoveries.filter(d=>d.user_id===userId);
-  const stickyColors=["yellow","pink","blue","green","orange"];
+
+  if(showFollowList){
+    return(
+      <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(58,48,40,0.5)",zIndex:300,display:"flex",alignItems:"flex-end"}}>
+        <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#faf7f2",borderRadius:"28px 28px 0 0",padding:"22px 20px 48px",boxShadow:"0 -8px 40px rgba(0,0,0,0.15)",animation:"slideUp 0.35s ease",maxHeight:"90dvh",overflowY:"auto"}}>
+          <div style={{width:40,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 16px"}}/>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+            <button onClick={()=>setShowFollowList(null)} style={{border:"none",background:"none",cursor:"pointer",fontSize:13,color:"#6db85c",fontWeight:700,fontFamily:font,padding:0}}>‹ 戻る</button>
+            <div style={{fontSize:15,fontWeight:800,fontFamily:font}}>{showFollowList==='followers'?'フォロワー':'フォロー中'} {followUsers.length}人</div>
+          </div>
+          {followUsers.length===0&&<div style={{textAlign:"center",padding:"30px 0",color:"#ccc",fontFamily:font,fontSize:13}}>まだいません</div>}
+          {followUsers.map(u=>(
+            <button key={u.id} onClick={()=>{onClose();onViewUser(u.id,u.name);}} style={{width:"100%",padding:"12px 16px",border:"none",background:"white",borderRadius:12,marginBottom:8,display:"flex",alignItems:"center",gap:12,cursor:"pointer",boxShadow:"0 1px 4px rgba(0,0,0,0.06)",fontFamily:font}}>
+              <div style={{width:40,height:40,borderRadius:"50%",overflow:"hidden",background:"#e8f5e3",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                {u.avatar_url?<img src={u.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:20}}>👤</span>}
+              </div>
+              <span style={{fontSize:14,fontWeight:600,color:"#3a3028"}}>{u.name}</span>
+              <span style={{marginLeft:"auto",fontSize:12,color:"#6db85c"}}>›</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(58,48,40,0.5)",zIndex:300,display:"flex",alignItems:"flex-end"}}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#faf7f2",borderRadius:"28px 28px 0 0",padding:"22px 20px 48px",boxShadow:"0 -8px 40px rgba(0,0,0,0.15)",animation:"slideUp 0.35s ease",maxHeight:"90dvh",overflowY:"auto"}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#faf7f2",borderRadius:"28px 28px 0 0",padding:"22px 20px 0",boxShadow:"0 -8px 40px rgba(0,0,0,0.15)",animation:"slideUp 0.35s ease",maxHeight:"90dvh",overflowY:"auto"}}>
         <div style={{width:40,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 16px"}}/>
+        {/* ヘッダー */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
-          <div><div style={{fontSize:18,fontWeight:800,fontFamily:font}}>🗒️ {isMe?"マイページ":userName}</div><div style={{fontSize:11,color:"#aaa",marginTop:3,fontFamily:font}}>フォロー {following.length}　フォロワー {followers.length}</div></div>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            {/* アバター */}
+            <div style={{position:"relative"}}>
+              <div style={{width:60,height:60,borderRadius:"50%",overflow:"hidden",background:"#e8f5e3",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:isMe?"pointer":"default",border:"2.5px solid #6db85c"}} onClick={()=>isMe&&avatarInputRef.current?.click()}>
+                {avatarUrl?<img src={avatarUrl} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:28}}>👤</span>}
+              </div>
+              {isMe&&<div style={{position:"absolute",bottom:0,right:0,width:20,height:20,background:"#6db85c",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:11}} onClick={()=>avatarInputRef.current?.click()}>✏️</div>}
+              {isMe&&<input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{display:"none"}}/>}
+            </div>
+            <div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:font}}>{isMe?"マイページ":userName}</div>
+              <div style={{display:"flex",gap:12,marginTop:4}}>
+                <button onClick={()=>loadFollowUsers('following')} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:"#3a3028",fontFamily:font,padding:0}}>フォロー <span style={{fontWeight:700,color:"#6db85c"}}>{following.length}</span></button>
+                <button onClick={()=>loadFollowUsers('followers')} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:"#3a3028",fontFamily:font,padding:0}}>フォロワー <span style={{fontWeight:700,color:"#6db85c"}}>{followers.length}</span></button>
+              </div>
+            </div>
+          </div>
           <div style={{display:"flex",gap:7,alignItems:"center"}}>
             {!isMe&&myUserId&&<button onClick={toggleFollow} disabled={loadingFollow} style={{padding:"7px 14px",borderRadius:11,border:"none",cursor:"pointer",background:isFollowing?"#fde8ef":"#6db85c",color:isFollowing?"#e06080":"white",fontSize:12,fontWeight:700,fontFamily:font}}>{loadingFollow?"…":isFollowing?"フォロー中":"フォロー"}</button>}
             <button onClick={onClose} style={{width:28,height:28,borderRadius:"50%",border:"none",background:"#eee8e0",color:"#aaa",fontSize:13,cursor:"pointer"}}>×</button>
           </div>
         </div>
+        {/* 名前編集(自分のみ) */}
         {isMe&&(
           <div style={{background:"white",borderRadius:13,padding:12,marginBottom:13,boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
-            <div style={{fontSize:11,fontWeight:700,color:"#6db85c",marginBottom:7,fontFamily:font}}>プロフィール編集</div>
+            <div style={{fontSize:11,fontWeight:700,color:"#6db85c",marginBottom:7,fontFamily:font}}>名前を変更</div>
             <input value={editName} onChange={e=>setEditName(e.target.value)} placeholder="名前" style={{width:"100%",padding:"8px 11px",borderRadius:9,border:"1px solid #e8e0d8",fontSize:13,fontFamily:font,outline:"none",boxSizing:"border-box",marginBottom:7}}/>
             <button onClick={saveName} disabled={savingName} style={{width:"100%",padding:"8px 0",borderRadius:9,border:"none",background:"#6db85c",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font}}>{savingName?"保存中…":"保存"}</button>
           </div>
         )}
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-          <div style={{fontSize:11,color:"#bbb",fontWeight:700,letterSpacing:2,fontFamily:font}}>過去の発見 {userDisc.length}件</div>
+        {/* 投稿数バッジ */}
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,padding:"0 2px"}}>
+          <div style={{fontSize:11,color:"#bbb",fontWeight:700,letterSpacing:2,fontFamily:font}}>発見 {userDisc.length}件</div>
           {isMe&&<div style={{fontSize:10,background:"#e8f5e3",color:"#6db85c",padding:"2px 8px",borderRadius:8,fontWeight:700,fontFamily:font}}>永久保存</div>}
         </div>
-        {userDisc.length===0&&<div style={{textAlign:"center",padding:"24px 0",color:"#ccc",fontFamily:font,fontSize:12}}>まだ投稿がありません</div>}
-        {userDisc.map((d,i)=>{
-          const isEven=i%2===0;
-          return(
-            <div key={d.id} style={{marginBottom:18,display:"flex",flexDirection:isEven?"row":"row-reverse",alignItems:"flex-start",gap:10}}>
-              <div style={{flexShrink:0}}><Polaroid photo={d.photo} emoji={d.emoji} category={d.category} small rotate={(i%3-1)*2}/></div>
-              <div style={{flex:1,paddingTop:4}}>
-                {d.note&&d.note!=="📷"&&<StickyNote text={d.note} colorKey={stickyColors[i%stickyColors.length]} rotate={(i%3-1)*1.5}/>}
-                <div style={{fontSize:10,color:"#bbb",marginTop:5,paddingLeft:2,fontFamily:font}}>{roundTimeStr(new Date(d.posted_at))} · ❤️{d.hearts||0}</div>
-              </div>
-            </div>
-          );
-        })}
+        {/* コルクボード */}
+        <div style={{background:"#c8a882",padding:"12px 8px 48px",minHeight:200,marginLeft:-20,marginRight:-20}}>
+          {userDisc.length===0&&<div style={{textAlign:"center",padding:"40px 0",color:"rgba(255,255,255,0.7)"}}><div style={{fontSize:32,marginBottom:8}}>🌱</div><div style={{fontSize:13,fontFamily:font}}>まだ投稿がありません</div></div>}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"24px 12px"}}>
+            {userDisc.map((d,i)=>{
+              const rot=[2,-3,1,-2,3,-1][i%6];
+              const sRot=[-2,3,-1,2,-3,1][i%6];
+              return(
+                <div key={d.id} style={{cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",paddingTop:10,position:"relative"}}>
+                  <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:12,height:18,zIndex:2,display:"flex",gap:2}}>
+                    <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
+                    <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
+                  </div>
+                  <div style={{transform:`rotate(${rot}deg)`,transformOrigin:"top center",filter:"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))"}}>
+                    <Polaroid photo={d.photo} emoji={d.emoji} category={d.category}/>
+                  </div>
+                  {d.note&&d.note!=="📷"&&(
+                    <div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}>
+                      <StickyNote text={d.note} colorKey={stickyColors[i%stickyColors.length]}/>
+                    </div>
+                  )}
+                  <div style={{fontSize:9,color:"rgba(255,255,255,0.8)",marginTop:4,fontFamily:font,textAlign:"center"}}>❤️{d.hearts||0}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-// ── PhotoEditor ──────────────────────────────────────────────────────────────
+// PhotoEditor: フィルターをピクセル操作で確実に適用
+function applyPixelFilters(ctx, W, H, brt, ctr, sat){
+  if(brt===100&&ctr===100&&sat===100)return;
+  try{
+    const id=ctx.getImageData(0,0,W,H);
+    const d=id.data;
+    const bl=brt/100;
+    const ct=ctr/100;
+    const st=sat/100;
+    for(let i=0;i<d.length;i+=4){
+      let r=d[i]*bl,g=d[i+1]*bl,b=d[i+2]*bl;
+      r=(r-128)*ct+128;g=(g-128)*ct+128;b=(b-128)*ct+128;
+      const gray=0.299*r+0.587*g+0.114*b;
+      r=gray+(r-gray)*st;g=gray+(g-gray)*st;b=gray+(b-gray)*st;
+      d[i]=Math.max(0,Math.min(255,Math.round(r)));
+      d[i+1]=Math.max(0,Math.min(255,Math.round(g)));
+      d[i+2]=Math.max(0,Math.min(255,Math.round(b)));
+    }
+    ctx.putImageData(id,0,0);
+  }catch(e){console.warn("pixel filter error",e);}
+}
+
 function PhotoEditor({photo,onSave,onClose}){
   const [tab,setTab]=useState("adjust");
   const [brightness,setBrightness]=useState(100);
@@ -428,7 +571,8 @@ function PhotoEditor({photo,onSave,onClose}){
   const canvasRef=useRef(null);
   const dragging=useRef(null);
   const imgRef=useRef(new window.Image());
-  const filter=`brightness(${brightness}%) contrast(${contrast}%) saturate(${saturate}%)`;
+  const cssFilter=`brightness(${brightness}%) contrast(${contrast}%) saturate(${saturate}%)`;
+
   useEffect(()=>{
     if(tab!=="crop")return;
     const canvas=canvasRef.current;if(!canvas)return;
@@ -436,7 +580,10 @@ function PhotoEditor({photo,onSave,onClose}){
     const draw=()=>{
       const W=canvas.width,H=canvas.height;
       const ctx=canvas.getContext("2d");
-      ctx.clearRect(0,0,W,H);ctx.filter=filter;ctx.drawImage(img,0,0,W,H);ctx.filter="none";
+      ctx.clearRect(0,0,W,H);
+      ctx.drawImage(img,0,0,W,H);
+      // ピクセル操作でフィルター適用
+      applyPixelFilters(ctx,W,H,brightness,contrast,saturate);
       const cx=crop.x*W,cy=crop.y*H,cw=crop.w*W,ch=crop.h*H;
       ctx.fillStyle="rgba(0,0,0,0.45)";
       ctx.fillRect(0,0,W,cy);ctx.fillRect(0,cy+ch,W,H-(cy+ch));ctx.fillRect(0,cy,cx,ch);ctx.fillRect(cx+cw,cy,W-(cx+cw),ch);
@@ -445,17 +592,23 @@ function PhotoEditor({photo,onSave,onClose}){
       [[cx,cy],[cx+cw,cy],[cx,cy+ch],[cx+cw,cy+ch]].forEach(([hx,hy])=>{ctx.fillStyle="white";ctx.fillRect(hx-5,hy-5,10,10);});
     };
     if(img.src!==photo){img.onload=draw;img.src=photo;}else draw();
-  },[tab,crop,filter,photo]);
+  },[tab,crop,brightness,contrast,saturate,photo]);
+
   function getPos(e){const c=canvasRef.current,r=c.getBoundingClientRect(),sx=c.width/r.width,sy=c.height/r.height,t=e.touches?e.touches[0]:e;return{x:(t.clientX-r.left)*sx/c.width,y:(t.clientY-r.top)*sy/c.height};}
   function onCropStart(e){e.preventDefault();const{x,y}=getPos(e);const{x:cx,y:cy,w:cw,h:ch}=crop,th=0.06;let handle=null;if(Math.abs(x-cx)<th&&Math.abs(y-cy)<th)handle="tl";else if(Math.abs(x-(cx+cw))<th&&Math.abs(y-cy)<th)handle="tr";else if(Math.abs(x-cx)<th&&Math.abs(y-(cy+ch))<th)handle="bl";else if(Math.abs(x-(cx+cw))<th&&Math.abs(y-(cy+ch))<th)handle="br";else if(x>cx&&x<cx+cw&&y>cy&&y<cy+ch)handle="move";if(handle)dragging.current={handle,startX:x,startY:y,startCrop:{...crop}};}
   function onCropMove(e){e.preventDefault();if(!dragging.current)return;const{x,y}=getPos(e);const{handle,startX,startY,startCrop:sc}=dragging.current;const dx=x-startX,dy=y-startY,min=0.1;let{x:nx,y:ny,w:nw,h:nh}={...sc};if(handle==="move"){nx=Math.max(0,Math.min(1-nw,sc.x+dx));ny=Math.max(0,Math.min(1-nh,sc.y+dy));}else if(handle==="tl"){nx=Math.max(0,Math.min(sc.x+sc.w-min,sc.x+dx));ny=Math.max(0,Math.min(sc.y+sc.h-min,sc.y+dy));nw=sc.x+sc.w-nx;nh=sc.y+sc.h-ny;}else if(handle==="tr"){ny=Math.max(0,Math.min(sc.y+sc.h-min,sc.y+dy));nw=Math.max(min,Math.min(1-sc.x,sc.w+dx));nh=sc.y+sc.h-ny;}else if(handle==="bl"){nx=Math.max(0,Math.min(sc.x+sc.w-min,sc.x+dx));nw=sc.x+sc.w-nx;nh=Math.max(min,Math.min(1-sc.y,sc.h+dy));}else if(handle==="br"){nw=Math.max(min,Math.min(1-sc.x,sc.w+dx));nh=Math.max(min,Math.min(1-sc.y,sc.h+dy));}setCrop({x:nx,y:ny,w:nw,h:nh});}
   function onCropEnd(){dragging.current=null;}
+
   function handleSave(){
     function draw(img){
+      const sw=img.naturalWidth||300,sh=img.naturalHeight||240;
+      const cw=Math.round(crop.w*sw)||300,ch=Math.round(crop.h*sh)||240;
       const off=document.createElement("canvas");
-      const sw=img.naturalWidth,sh=img.naturalHeight,cw=Math.round(crop.w*sw),ch=Math.round(crop.h*sh);
-      off.width=cw||300;off.height=ch||240;
-      const ctx=off.getContext("2d");ctx.filter=filter;ctx.drawImage(img,crop.x*sw,crop.y*sh,cw,ch,0,0,cw,ch);
+      off.width=cw;off.height=ch;
+      const ctx=off.getContext("2d");
+      ctx.drawImage(img,Math.round(crop.x*sw),Math.round(crop.y*sh),cw,ch,0,0,cw,ch);
+      // ピクセル操作でフィルターを確実に適用
+      applyPixelFilters(ctx,cw,ch,brightness,contrast,saturate);
       onSave({brightness,contrast,saturate,rotate,croppedPhoto:off.toDataURL("image/jpeg",0.92)});
     }
     const img=new window.Image();
@@ -464,6 +617,7 @@ function PhotoEditor({photo,onSave,onClose}){
     img.src=photo;
     if(img.complete&&img.naturalWidth>0&&!done){done=true;draw(img);}
   }
+
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:400,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"16px"}}>
       <div style={{background:"white",borderRadius:20,padding:18,width:"100%",maxWidth:400,maxHeight:"90dvh",overflowY:"auto"}}>
@@ -480,12 +634,12 @@ function PhotoEditor({photo,onSave,onClose}){
           <>
             <div style={{display:"flex",justifyContent:"center",marginBottom:13}}>
               <div style={{background:"white",padding:"7px 7px 24px",boxShadow:"0 4px 16px rgba(0,0,0,0.18)",borderRadius:2,transform:`rotate(${rotate}deg)`}}>
-                <img src={photo} alt="" style={{width:150,height:120,objectFit:"cover",display:"block",filter}}/>
+                <img src={photo} alt="" style={{width:150,height:120,objectFit:"cover",display:"block",filter:cssFilter}}/>
               </div>
             </div>
             {[{label:"☀️ 明るさ",val:brightness,set:setBrightness,min:50,max:200},{label:"◑ コントラスト",val:contrast,set:setContrast,min:50,max:200},{label:"🎨 彩度",val:saturate,set:setSaturate,min:0,max:200},{label:"↻ 傾き",val:rotate+10,set:v=>setRotate(v-10),min:0,max:20}].map(s=>(
               <div key={s.label} style={{marginBottom:9}}>
-                <div style={{fontSize:11,color:"#888",marginBottom:2,fontFamily:font}}>{s.label}</div>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}><span style={{fontSize:11,color:"#888",fontFamily:font}}>{s.label}</span><span style={{fontSize:10,color:"#bbb",fontFamily:font}}>{s.val}</span></div>
                 <input type="range" min={s.min} max={s.max} value={s.val} onChange={e=>s.set(Number(e.target.value))} style={{width:"100%",accentColor:"#6db85c"}}/>
               </div>
             ))}
@@ -509,7 +663,6 @@ function PhotoEditor({photo,onSave,onClose}){
   );
 }
 
-// ── LocationSearch ───────────────────────────────────────────────────────────
 function LocationSearch({onSelect}){
   const [q,setQ]=useState("");
   const [results,setResults]=useState([]);
@@ -543,7 +696,7 @@ function LocationSearch({onSelect}){
   );
 }
 
-// ── CaptureModal ─────────────────────────────────────────────────────────────
+// CaptureModal: カメラ/アルバム別input・モチーフ文字なし大きく・色選択ダイアログ
 function CaptureModal({userLocation,locStatus,onClose,onSave,laterMode=false}){
   const [note,setNote]=useState("");
   const [category,setCategory]=useState("flower");
@@ -555,9 +708,13 @@ function CaptureModal({userLocation,locStatus,onClose,onSave,laterMode=false}){
   const [laterTime,setLaterTime]=useState("");
   const [laterLat,setLaterLat]=useState(userLocation?.lat||null);
   const [laterLng,setLaterLng]=useState(userLocation?.lng||null);
-  const photoRef=useRef(null);
+  const cameraRef=useRef(null);
+  const albumRef=useRef(null);
+  const colorInputRef=useRef(null);
+
   function handleCat(v){setCategory(v);setColor(CAT[v]?.defaultColor||"#7a8a6a");}
   function handlePhoto(e){const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=ev=>{setPhoto(ev.target.result);setShowEditor(true);};r.readAsDataURL(f);}
+
   async function handleSave(){
     if(!note.trim()&&!photo)return;
     setLoading(true);
@@ -566,8 +723,10 @@ function CaptureModal({userLocation,locStatus,onClose,onSave,laterMode=false}){
     await onSave({note:note||"📷",category,emoji:color,photo:photoEdit?.croppedPhoto||photo,photoEdit,weather:null,lat,lng,customTime:laterMode&&laterTime?laterTime:null});
     setLoading(false);
   }
+
   const locBadge=locStatus==="ok"?{bg:"#e8f5e3",color:"#6db85c",text:`GPS（${roundTimeStr(new Date())}）`}:locStatus==="loading"?{bg:"#fff8e8",color:"#c9a836",text:"取得中"}:{bg:"#fdeee7",color:"#d97041",text:"オフ"};
   if(showEditor&&photo)return <PhotoEditor photo={photo} onSave={edit=>{setPhotoEdit(edit);setShowEditor(false);}} onClose={()=>setShowEditor(false)}/>;
+
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(58,48,40,0.6)",zIndex:300,display:"flex",alignItems:"flex-end"}}>
       <div style={{width:"100%",maxWidth:430,margin:"0 auto",padding:"18px 18px 36px",background:"#faf7f2",borderRadius:"28px 28px 0 0",animation:"slideUp 0.3s ease",maxHeight:"92dvh",overflowY:"auto"}}>
@@ -591,45 +750,48 @@ function CaptureModal({userLocation,locStatus,onClose,onSave,laterMode=false}){
             <PinEditMap lat={laterLat||35.6812} lng={laterLng||139.7671} onMove={(la,lo)=>{setLaterLat(la);setLaterLng(lo);}}/>
           </div>
         </>}
-        <input ref={photoRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
+        {/* カメラ/アルバム: 別々のinputで確実に動作 */}
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{display:"none"}}/>
+        <input ref={albumRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
         <div style={{marginBottom:11}}>
           {photo
             ?<div style={{position:"relative",display:"flex",justifyContent:"center"}}>
                 <div style={{background:"white",padding:"7px 7px 24px",boxShadow:"0 4px 16px rgba(0,0,0,0.18)",borderRadius:2,transform:`rotate(${photoEdit?.rotate||0}deg)`}}>
-                  <img src={photoEdit?.croppedPhoto||photo} alt="" style={{width:150,height:120,objectFit:"cover",display:"block",filter:photoEdit?.croppedPhoto?"none":`brightness(${photoEdit?.brightness||100}%) contrast(${photoEdit?.contrast||100}%) saturate(${photoEdit?.saturate||100}%)`}}/>
+                  <img src={photoEdit?.croppedPhoto||photo} alt="" style={{width:150,height:120,objectFit:"cover",display:"block"}}/>
                 </div>
                 <div style={{position:"absolute",top:4,right:4,display:"flex",gap:4}}>
                   <button onClick={()=>setShowEditor(true)} style={{padding:"3px 7px",borderRadius:7,border:"none",background:"rgba(0,0,0,0.55)",color:"white",fontSize:11,cursor:"pointer"}}>✏️</button>
-                  <button onClick={()=>{setPhoto(null);setPhotoEdit(null);photoRef.current?.setAttribute("capture","environment");photoRef.current?.click();}} style={{width:22,height:22,borderRadius:"50%",border:"none",background:"rgba(0,0,0,0.5)",color:"white",fontSize:11,cursor:"pointer"}}>↺</button>
+                  <button onClick={()=>{setPhoto(null);setPhotoEdit(null);}} style={{width:22,height:22,borderRadius:"50%",border:"none",background:"rgba(0,0,0,0.5)",color:"white",fontSize:11,cursor:"pointer"}}>×</button>
                 </div>
               </div>
             :<div style={{display:"flex",gap:8}}>
-              <button onClick={()=>{photoRef.current?.setAttribute("capture","environment");photoRef.current?.click();}} style={{flex:1,padding:"14px 0",borderRadius:12,border:"1.5px dashed #c8e0b8",background:"#f4faf0",color:"#6db85c",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font}}>📷 カメラ</button>
-              <button onClick={()=>{photoRef.current?.removeAttribute("capture");photoRef.current?.click();}} style={{flex:1,padding:"14px 0",borderRadius:12,border:"1.5px dashed #c8e0b8",background:"#f4faf0",color:"#6db85c",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font}}>🖼️ アルバム</button>
+              <button onClick={()=>cameraRef.current?.click()} style={{flex:1,padding:"14px 0",borderRadius:12,border:"1.5px dashed #c8e0b8",background:"#f4faf0",color:"#6db85c",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font}}>📷 カメラ</button>
+              <button onClick={()=>albumRef.current?.click()} style={{flex:1,padding:"14px 0",borderRadius:12,border:"1.5px dashed #c8e0b8",background:"#f4faf0",color:"#6db85c",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font}}>🖼️ アルバム</button>
             </div>
           }
         </div>
-        <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>モチーフ</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:8}}>
+        {/* モチーフ: 文字なし・アイコン大きく */}
+        <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:6,fontFamily:font}}>モチーフ</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:10}}>
           {CATEGORIES.map(c=>{
             const sel=category===c.value;
             const col=sel?color:c.defaultColor;
             return(
-              <button key={c.value} onClick={()=>handleCat(c.value)} style={{padding:"8px 4px",borderRadius:11,border:"none",cursor:"pointer",background:sel?getBg(color):"white",fontWeight:sel?700:400,fontSize:10,fontFamily:font,boxShadow:sel?`0 0 0 2px ${color}`:"0 1px 4px rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:sel?color:"#aaa"}}>
-                <MotifIcon motif={c.value} color={col} size={20} shadow={sel}/>
-                {c.label}
+              <button key={c.value} onClick={()=>handleCat(c.value)} style={{padding:"12px 4px",borderRadius:12,border:"none",cursor:"pointer",background:sel?getBg(color):"white",boxShadow:sel?`0 0 0 2.5px ${color}`:"0 1px 4px rgba(0,0,0,0.08)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <MotifIcon motif={c.value} color={col} size={28} shadow={sel}/>
               </button>
             );
           })}
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:11,padding:"8px 10px",borderRadius:10,background:"white",border:"1px solid #e8e0d8"}}>
-          <span style={{fontSize:11,color:"#888",fontFamily:font,flexShrink:0}}>🎨 色</span>
-          <div style={{display:"flex",gap:5,flexWrap:"wrap",flex:1,alignItems:"center"}}>
-            {["#e06080","#4a9cc7","#3ab8a0","#7ab0d4","#8b7cc8","#9b72cc","#f5b942","#c9813a","#6db85c","#e07840"].map(c=>(
-              <button key={c} onClick={()=>setColor(c)} style={{width:22,height:22,borderRadius:"50%",border:color===c?"3px solid #444":"2px solid transparent",background:c,cursor:"pointer",outline:"none",boxSizing:"border-box",flexShrink:0}}/>
-            ))}
-            <input type="color" value={color} onChange={e=>setColor(e.target.value)} style={{width:22,height:22,padding:0,border:"none",borderRadius:"50%",cursor:"pointer",flexShrink:0}} title="カスタムカラー"/>
-          </div>
+        {/* 色選択: ダイアログ形式ボタン */}
+        <div style={{marginBottom:11}}>
+          <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>モチーフカラー</div>
+          <button onClick={()=>colorInputRef.current?.click()} style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1px solid #e8e0d8",background:"white",display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontFamily:font}}>
+            <div style={{width:30,height:30,borderRadius:8,background:color,flexShrink:0,boxShadow:"0 1px 4px rgba(0,0,0,0.15)"}}/>
+            <span style={{fontSize:12,color:"#888"}}>🎨 色を選ぶ</span>
+            <div style={{marginLeft:"auto",fontSize:11,color:"#bbb",fontFamily:"monospace"}}>{color}</div>
+          </button>
+          <input ref={colorInputRef} type="color" value={color} onChange={e=>setColor(e.target.value)} style={{position:"absolute",opacity:0,width:0,height:0,pointerEvents:"none"}}/>
         </div>
         <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>ひとこと（写真のみでもOK）</div>
         <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="何を見つけた？感じた？（省略可）" rows={3} style={{width:"100%",padding:"10px 12px",borderRadius:12,border:"1.5px solid #e8e0d8",background:"white",color:"#3a3028",fontSize:13,resize:"none",boxSizing:"border-box",outline:"none",fontFamily:font,lineHeight:1.6}}/>
@@ -641,7 +803,6 @@ function CaptureModal({userLocation,locStatus,onClose,onSave,laterMode=false}){
   );
 }
 
-// ── LoginScreen ──────────────────────────────────────────────────────────────
 function LoginScreen(){
   return(
     <div style={{minHeight:"100dvh",background:"#faf7f2",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:font,padding:32}}>
@@ -657,7 +818,46 @@ function LoginScreen(){
   );
 }
 
-// ── Main App ─────────────────────────────────────────────────────────────────
+// ── コルクボードグリッド共通コンポーネント
+function CorkBoard({items,onItemClick,showUser=false}){
+  const stickyColors=["yellow","pink","blue","green","orange"];
+  if(items.length===0)return(
+    <div style={{textAlign:"center",padding:"50px 0",color:"rgba(255,255,255,0.7)"}}>
+      <div style={{fontSize:36,marginBottom:10}}>🌱</div>
+      <div style={{fontSize:13,fontFamily:font}}>まだ投稿がありません</div>
+    </div>
+  );
+  return(
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"24px 12px"}}>
+      {items.map((d,i)=>{
+        const rot=[2,-3,1,-2,3,-1][i%6];
+        const sRot=[-2,3,-1,2,-3,1][i%6];
+        return(
+          <div key={d.id} onClick={()=>onItemClick(d)} style={{cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",paddingTop:10,position:"relative"}}>
+            <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:12,height:18,zIndex:2,display:"flex",gap:2}}>
+              <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
+              <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
+            </div>
+            <div style={{transform:`rotate(${rot}deg)`,transformOrigin:"top center",filter:"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))"}}>
+              <Polaroid photo={d.photo} emoji={d.emoji} category={d.category}/>
+            </div>
+            {d.note&&d.note!=="📷"&&(
+              <div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}>
+                <StickyNote text={d.note} colorKey={stickyColors[i%stickyColors.length]}/>
+              </div>
+            )}
+            <div style={{fontSize:9,color:"rgba(255,255,255,0.8)",marginTop:4,fontFamily:font,textAlign:"center",display:"flex",alignItems:"center",gap:4}}>
+              {showUser&&d.user_name&&<span style={{opacity:0.9}}>{d.user_name}</span>}
+              <span>❤️{d.hearts||0}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Main App
 export default function App(){
   const [tab,setTab]               = useState(0);
   const [discoveries,setDiscoveries]   = useState([]);
@@ -672,6 +872,7 @@ export default function App(){
   const [myHearts,setMyHearts]     = useState(()=>lsGet("myHearts",[]));
   const [myUserId,setMyUserId]     = useState(null);
   const [myUserName,setMyUserName] = useState("");
+  const [myAvatar,setMyAvatar]     = useState(()=>lsGet("myAvatar",null));
   const [authReady,setAuthReady]   = useState(false);
   const [menuOpen,setMenuOpen]     = useState(false);
   const [showAI,setShowAI]         = useState(false);
@@ -698,7 +899,6 @@ export default function App(){
   // Auth init
   useEffect(()=>{
     async function init(){
-      // URLにaccess_tokenがあればコールバック処理
       const hash=window.location.hash;
       if(hash&&hash.includes("access_token")){
         const p=new URLSearchParams(hash.replace("#","?"));
@@ -711,23 +911,29 @@ export default function App(){
             saveSession(sess);sessionRef.current=sess;
             const name=user.user_metadata?.full_name||user.email?.split("@")[0]||"旅人";
             setMyUserId(user.id);setMyUserName(name);lsSet("userName",name);
-            // usersテーブルupsert
             await supa(`users?id=eq.${user.id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({name})},at).catch(()=>{});
             await supa("users",{method:"POST",prefer:"return=minimal",body:JSON.stringify({id:user.id,name})},at).catch(()=>{});
+            // アバター取得
+            const udata=await supa(`users?id=eq.${user.id}&select=avatar_url`,{},at).catch(()=>null);
+            if(udata&&udata[0]?.avatar_url){setMyAvatar(udata[0].avatar_url);lsSet("myAvatar",udata[0].avatar_url);}
           }catch(e){console.error(e);}
           window.history.replaceState(null,"",window.location.pathname);
         }
         setAuthReady(true);return;
       }
-      // 保存済みセッション
       const stored=getSession();
       if(stored){
         if(stored.expires_at&&Date.now()>stored.expires_at-300000){
           const refreshed=await refreshToken(stored.refresh_token);
-          if(refreshed){saveSession(refreshed);sessionRef.current=refreshed;const u=refreshed.user;setMyUserId(u.id);setMyUserName(lsGet("userName",u.user_metadata?.full_name||"旅人"));}
-          else{saveSession(null);}
+          if(refreshed){
+            saveSession(refreshed);sessionRef.current=refreshed;
+            const u=refreshed.user;setMyUserId(u.id);setMyUserName(lsGet("userName",u.user_metadata?.full_name||"旅人"));
+            setMyAvatar(lsGet("myAvatar",null));
+          }else{saveSession(null);}
         }else{
-          sessionRef.current=stored;const u=stored.user;setMyUserId(u.id);setMyUserName(lsGet("userName",u.user_metadata?.full_name||"旅人"));
+          sessionRef.current=stored;const u=stored.user;
+          setMyUserId(u.id);setMyUserName(lsGet("userName",u.user_metadata?.full_name||"旅人"));
+          setMyAvatar(lsGet("myAvatar",null));
         }
       }
       setAuthReady(true);
@@ -735,17 +941,22 @@ export default function App(){
     init();
   },[]);
 
-  // データ取得
+  // アバター更新の反映
+  useEffect(()=>{
+    if(myAvatar)lsSet("myAvatar",myAvatar);
+  },[myAvatar]);
+
+  // データ取得: 7日間
   async function fetchAll(){
     try{
-      const since=new Date(Date.now()-5*24*3600000).toISOString();
-      const data=await supa(`discoveries?posted_at=gte.${since}&order=posted_at.desc&limit=200&select=id,note,category,emoji,photo,weather,lat,lng,ai_msg,hearts,user_id,user_name,custom_time,posted_at`);
+      const since=new Date(Date.now()-7*24*3600000).toISOString();
+      const data=await supa(`discoveries?posted_at=gte.${since}&order=posted_at.desc&limit=300&select=id,note,category,emoji,photo,weather,lat,lng,ai_msg,hearts,user_id,user_name,user_avatar,custom_time,posted_at`);
       setDiscoveries(data||[]);
     }catch(e){console.error(e);}
   }
   async function fetchMy(uid){
     try{
-      const data=await supa(`discoveries?user_id=eq.${uid}&order=posted_at.desc&limit=200&select=id,note,category,emoji,photo,weather,lat,lng,ai_msg,hearts,user_id,user_name,custom_time,posted_at`);
+      const data=await supa(`discoveries?user_id=eq.${uid}&order=posted_at.desc&limit=500&select=id,note,category,emoji,photo,weather,lat,lng,ai_msg,hearts,user_id,user_name,user_avatar,custom_time,posted_at`);
       setMyDiscoveries(data||[]);
     }catch(e){console.error(e);}
   }
@@ -754,7 +965,7 @@ export default function App(){
       const since=new Date(Date.now()-3*3600000).toISOString();
       const data=await supa(`weather_reports?posted_at=gte.${since}&order=posted_at.desc&limit=50&select=id,weather,lat,lng,posted_at`);
       setWeatherReports(data||[]);
-    }catch(e){}
+    }catch{}
   }
   useEffect(()=>{
     if(!authReady)return;
@@ -764,6 +975,7 @@ export default function App(){
     return()=>{clearInterval(t1);clearInterval(t2);};
   },[authReady,myUserId]);
 
+  // 5km圏内フィルタ
   const nearby=discoveries.filter(d=>{
     if(!userLocation)return true;
     if(!d.lat||!d.lng)return true;
@@ -808,7 +1020,7 @@ export default function App(){
       const finalPhoto=photoEdit?.croppedPhoto||photo||null;
       let photoUrl=null;
       if(finalPhoto)photoUrl=await uploadPhoto(finalPhoto,token);
-      const row={note:note||"📷",category,emoji,photo:photoUrl,weather:weather||null,lat:lat||null,lng:lng||null,ai_msg:msg,hearts:0,user_id:myUserId||null,user_name:myUserName||null,custom_time:customTime||null};
+      const row={note:note||"📷",category,emoji,photo:photoUrl,weather:weather||null,lat:lat||null,lng:lng||null,ai_msg:msg,hearts:0,user_id:myUserId||null,user_name:myUserName||null,user_avatar:myAvatar||null,custom_time:customTime||null};
       const saved=await supa("discoveries",{method:"POST",prefer:"return=representation",body:JSON.stringify(row)},token);
       const entry=Array.isArray(saved)?saved[0]:saved;
       setDiscoveries(prev=>[entry,...prev]);
@@ -825,7 +1037,6 @@ export default function App(){
     window.location.reload();
   }
 
-  // ローディング
   if(!authReady){
     return(
       <div style={{minHeight:"100dvh",background:"#faf7f2",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12,fontFamily:font}}>
@@ -834,18 +1045,23 @@ export default function App(){
       </div>
     );
   }
-  // 未ログイン
   if(!myUserId)return <LoginScreen/>;
 
-  const TABS=["ホーム","思い出","マイページ"];
+  // タイムライン: 1週間・5km圏内・カテゴリフィルタ
+  const timelineItems=nearby.filter(d=>visibleCats.includes(d.category));
+  // 思い出: 自分の全投稿・カテゴリフィルタ
+  const memoryItems=myDiscoveries.filter(d=>visibleCats.includes(d.category));
+
+  const TABS=["ホーム","タイムライン","思い出"];
   const stickyColors=["yellow","pink","blue","green","orange"];
 
   return(
     <div style={{height:"100dvh",background:"#faf7f2",fontFamily:font,color:"#3a3028",display:"flex",flexDirection:"column",maxWidth:430,margin:"0 auto",overflow:"hidden"}}>
 
-      <SlideMenu open={menuOpen} onClose={()=>setMenuOpen(false)} myCount={myDiscoveries.length}
+      <SlideMenu open={menuOpen} onClose={()=>setMenuOpen(false)}
         onSetTab={setTab} onOpenProfile={()=>{setProfileTarget({id:null,name:null});setShowProfile(true);}}
-        onSignOut={handleSignOut} onCaptureLater={()=>setShowCaptureLater(true)} userName={myUserName}/>
+        onSignOut={handleSignOut} onCaptureLater={()=>setShowCaptureLater(true)}
+        userName={myUserName} avatarUrl={myAvatar}/>
 
       {/* ホームタブ */}
       {tab===0&&(
@@ -873,18 +1089,18 @@ export default function App(){
             </div>
             {nearby.length>0&&<div style={{position:"absolute",bottom:8,left:"50%",transform:"translateX(-50%)",zIndex:1000,background:"rgba(255,252,245,0.95)",borderRadius:16,padding:"5px 14px",boxShadow:"0 2px 10px rgba(0,0,0,0.1)",fontSize:11,color:"#6db85c",fontWeight:700,whiteSpace:"nowrap"}}>👥 半径5km内に{nearby.length}件</div>}
           </div>
-          {/* 下バー */}
+          {/* 下バー: タイムライン + 投稿ボタン */}
           <div style={{flexShrink:0,background:"rgba(250,247,242,0.98)",borderTop:"1px solid rgba(0,0,0,0.08)",display:"flex",alignItems:"center",padding:`10px 24px env(safe-area-inset-bottom,16px)`}}>
             <button onClick={()=>setTab(1)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,border:"none",background:"none",cursor:"pointer",color:"#888"}}>
-              <span style={{fontSize:18}}>📖</span>
-              <span style={{fontSize:10,fontWeight:500,fontFamily:font}}>思い出</span>
+              <span style={{fontSize:18}}>🗒️</span>
+              <span style={{fontSize:10,fontWeight:500,fontFamily:font}}>タイムライン</span>
             </button>
             <button onClick={()=>setShowCapture(true)} style={{width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:26,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",display:"flex",alignItems:"center",justifyContent:"center",marginLeft:"auto"}}>+</button>
           </div>
         </div>
       )}
 
-      {/* タイムライン・マイページ */}
+      {/* タイムライン・思い出タブ */}
       {tab!==0&&(
         <>
           <div style={{position:"sticky",top:0,zIndex:30,background:"white",borderBottom:"1px solid #eee8e0"}}>
@@ -893,89 +1109,33 @@ export default function App(){
               <div style={{fontSize:17,fontWeight:800}}>{TABS[tab]}</div>
               <button onClick={()=>setMenuOpen(true)} style={{width:32,height:32,borderRadius:9,border:"none",background:"#f5f0ea",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>≡</button>
             </div>
+            {/* カテゴリフィルタ */}
+            <div style={{display:"flex",gap:5,padding:"0 12px 10px",overflowX:"auto"}}>
+              {CATEGORIES.map(c=>{const on=visibleCats.includes(c.value);return <button key={c.value} onClick={()=>toggleCat(c.value)} style={{flexShrink:0,width:30,height:30,borderRadius:9,border:"none",cursor:"pointer",background:on?"white":"rgba(0,0,0,0.06)",opacity:on?1:0.5,boxShadow:on?"0 1px 4px rgba(0,0,0,0.12)":"none",transition:"all 0.15s",display:"flex",alignItems:"center",justifyContent:"center"}}><MotifIcon motif={c.value} color={on?c.defaultColor:"#aaa"} size={16}/></button>;})}
+            </div>
           </div>
           <div style={{flex:1,overflowY:"auto",paddingBottom:80,minHeight:0}}>
 
-            {/* タイムライン */}
+            {/* タイムライン: 1週間・近くの全投稿 */}
             {tab===1&&(
               <div style={{background:"#c8a882",minHeight:"100%",padding:"10px 8px 80px"}}>
-                <div style={{display:"flex",gap:5,marginBottom:12,overflowX:"auto",paddingBottom:3,paddingLeft:2}}>
-                  {CATEGORIES.map(c=>{const on=visibleCats.includes(c.value);return <button key={c.value} onClick={()=>toggleCat(c.value)} style={{flexShrink:0,width:28,height:28,borderRadius:8,border:"none",cursor:"pointer",background:on?"white":"rgba(0,0,0,0.15)",opacity:on?1:0.5,boxShadow:on?"0 1px 4px rgba(0,0,0,0.15)":"none",transition:"all 0.15s",display:"flex",alignItems:"center",justifyContent:"center"}}><MotifIcon motif={c.value} color={on?c.defaultColor:"#aaa"} size={14}/></button>;})}
-                </div>
-                {myDiscoveries.filter(d=>visibleCats.includes(d.category)).length===0&&(
-                  <div style={{textAlign:"center",padding:"50px 0",color:"rgba(255,255,255,0.7)"}}><div style={{fontSize:36,marginBottom:10}}>🌱</div><div style={{fontSize:13,fontFamily:font}}>まだ投稿がありません</div></div>
+                {timelineItems.length===0&&(
+                  <div style={{textAlign:"center",padding:"50px 0",color:"rgba(255,255,255,0.7)"}}><div style={{fontSize:36,marginBottom:10}}>🌱</div><div style={{fontSize:13,fontFamily:font}}>近くの発見はまだありません</div></div>
                 )}
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"24px 12px"}}>
-                  {myDiscoveries.filter(d=>visibleCats.includes(d.category)).map((d,i)=>{
-                    const rot=[2,-3,1,-2,3,-1][i%6];
-                    const sRot=[-2,3,-1,2,-3,1][i%6];
-                    return(
-                      <div key={d.id} onClick={()=>setSelected(d)} style={{cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",paddingTop:10,position:"relative"}}>
-                        <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:12,height:18,zIndex:2,display:"flex",gap:2}}>
-                          <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
-                          <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
-                        </div>
-                        <div style={{transform:`rotate(${rot}deg)`,transformOrigin:"top center",filter:"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))"}}>
-                          <Polaroid photo={d.photo} emoji={d.emoji} category={d.category}/>
-                        </div>
-                        {d.note&&d.note!=="📷"&&(
-                          <div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}>
-                            <StickyNote text={d.note} colorKey={stickyColors[i%stickyColors.length]}/>
-                          </div>
-                        )}
-                        <div style={{fontSize:9,color:"rgba(255,255,255,0.8)",marginTop:4,fontFamily:font,textAlign:"center"}}>❤️{d.hearts||0}</div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <CorkBoard items={timelineItems} onItemClick={setSelected} showUser={true}/>
               </div>
             )}
 
-            {/* マイページ */}
+            {/* 思い出: 自分の全投稿・永久保存 */}
             {tab===2&&(
-              <div style={{padding:"0 0 80px"}}>
-                <div style={{padding:"14px 14px 0"}}>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-                    {[{label:"自分の発見",value:myDiscoveries.length,emoji:"✨",color:"#6db85c"},{label:"もらったいいね",value:myDiscoveries.reduce((s,d)=>s+(d.hearts||0),0),emoji:"❤️",color:"#e06080"}].map(s=>(
-                      <div key={s.label} style={{background:"white",padding:"14px 8px",borderRadius:14,textAlign:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
-                        <div style={{fontSize:22,marginBottom:3}}>{s.emoji}</div>
-                        <div style={{fontSize:22,fontWeight:800,color:s.color}}>{s.value}</div>
-                        <div style={{fontSize:10,color:"#bbb",marginTop:2,fontFamily:font}}>{s.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <button onClick={()=>{setProfileTarget({id:null,name:null});setShowProfile(true);}} style={{width:"100%",padding:"11px 0",borderRadius:13,border:"1.5px solid #d8f0c8",background:"#f4faf0",color:"#6db85c",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:font,marginBottom:12}}>プロフィール編集・フォロー ›</button>
-                </div>
-                {myDiscoveries.length===0&&<div style={{textAlign:"center",padding:"50px 0",color:"#bbb"}}><div style={{fontSize:36,marginBottom:10}}>📷</div><div style={{fontSize:13,fontFamily:font}}>まだ投稿がありません</div></div>}
-                <div style={{background:"#c8a882",padding:"16px 8px",minHeight:200}}>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"24px 12px"}}>
-                    {myDiscoveries.map((d,i)=>{
-                      const rot=[2,-3,1,-2,3,-1][i%6];
-                      const sRot=[-2,3,-1,2,-3,1][i%6];
-                      return(
-                        <div key={d.id} onClick={()=>setSelected(d)} style={{cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",paddingTop:10,position:"relative"}}>
-                          <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:12,height:18,zIndex:2,display:"flex",gap:2}}>
-                            <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
-                            <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
-                          </div>
-                          <div style={{transform:`rotate(${rot}deg)`,transformOrigin:"top center",filter:"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))"}}>
-                            <Polaroid photo={d.photo} emoji={d.emoji} category={d.category}/>
-                          </div>
-                          {d.note&&d.note!=="📷"&&(
-                            <div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}>
-                              <StickyNote text={d.note} colorKey={stickyColors[i%stickyColors.length]}/>
-                            </div>
-                          )}
-                          <div style={{fontSize:9,color:"rgba(255,255,255,0.8)",marginTop:4,fontFamily:font,textAlign:"center"}}>❤️{d.hearts||0}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+              <div style={{background:"#c8a882",minHeight:"100%",padding:"10px 8px 80px"}}>
+                {memoryItems.length===0&&(
+                  <div style={{textAlign:"center",padding:"50px 0",color:"rgba(255,255,255,0.7)"}}><div style={{fontSize:36,marginBottom:10}}>📷</div><div style={{fontSize:13,fontFamily:font}}>まだ投稿がありません</div></div>
+                )}
+                <CorkBoard items={memoryItems} onItemClick={setSelected} showUser={false}/>
               </div>
             )}
           </div>
-          {/* FAB */}
           {!showCapture&&!showAI&&!selected&&!showWeatherPanel&&!showProfile&&(
             <button onClick={()=>setShowCapture(true)} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px) + 22px)",right:18,width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:24,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",zIndex:50,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
           )}
@@ -985,7 +1145,15 @@ export default function App(){
       {/* モーダル */}
       {selected&&<DetailModal item={selected} isOwn={myDiscoveries.some(d=>d.id===selected.id)} onClose={()=>setSelected(null)} onHeart={handleHeart} myHearts={myHearts} onUpdate={handleUpdate} onDelete={handleDelete} onViewUser={(id,name)=>{setSelected(null);setProfileTarget({id,name});setShowProfile(true);}}/>}
       {showWeatherPanel&&<WeatherPanel userLocation={userLocation} onPost={()=>{fetchWeather();setShowWeatherPanel(false);}} onClose={()=>setShowWeatherPanel(false)}/>}
-      {showProfile&&<ProfileModal myUserId={myUserId} myUserName={myUserName} targetUserId={profileTarget.id} targetUserName={profileTarget.name} discoveries={[...discoveries,...myDiscoveries.filter(d=>!discoveries.find(x=>x.id===d.id))]} token={sessionRef.current?.access_token} onClose={()=>setShowProfile(false)}/>}
+      {showProfile&&<ProfileModal
+        key={profileTarget.id||'me'}
+        myUserId={myUserId} myUserName={myUserName} myAvatar={myAvatar}
+        targetUserId={profileTarget.id} targetUserName={profileTarget.name}
+        discoveries={[...discoveries,...myDiscoveries.filter(d=>!discoveries.find(x=>x.id===d.id))]}
+        token={sessionRef.current?.access_token}
+        onClose={()=>setShowProfile(false)}
+        onViewUser={(id,name)=>{setProfileTarget({id,name});}}
+      />}
       {showAI&&(
         <div onClick={()=>setShowAI(false)} style={{position:"fixed",inset:0,background:"rgba(58,48,40,0.5)",zIndex:300,display:"flex",alignItems:"flex-end"}}>
           <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",padding:"26px 22px 46px",background:"#faf7f2",borderRadius:"28px 28px 0 0",animation:"slideUp 0.4s ease"}}>

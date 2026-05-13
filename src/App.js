@@ -209,8 +209,9 @@ function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick
     if(!rdy||!iRef.current)return;
     const L=window.L;
     dMk.current.forEach(m=>m.remove());dMk.current=[];
-    discoveries.filter(d=>d.lat&&d.lng&&visibleCats.includes(d.category)).forEach(d=>{
-      const age=Date.now()-new Date(d.posted_at).getTime();
+    const mapOneWeekAgo=Date.now()-7*24*3600*1000;
+    discoveries.filter(d=>d.lat&&d.lng&&visibleCats.includes(d.category)&&new Date(d.custom_time||d.posted_at).getTime()>=mapOneWeekAgo).forEach(d=>{
+      const age=Date.now()-new Date(d.custom_time||d.posted_at).getTime();
       const op=Math.max(0.3,1-(age/(7*24*3600000))*0.7);
       const color=getColor(d);
       const m=MOTIF_SVG[d.category]||MOTIF_SVG.sparkle;

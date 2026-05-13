@@ -126,31 +126,63 @@ function StickyNote({text,colorKey="yellow",rotate=0}){
   );
 }
 
-// 気分カラーピッカーダイアログ
 function MoodColorPicker({color,onChange,onClose}){
-  const colorInputRef=useRef(null);
+  function h2hsl(hex){
+    const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
+    const max=Math.max(r,g,b),min=Math.min(r,g,b);let h,s,l=(max+min)/2;
+    if(max===min){h=s=0;}else{const d=max-min;s=l>0.5?d/(2-max-min):d/(max+min);switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}h/=6;}
+    return[Math.round(h*360),Math.round(s*100),Math.round(l*100)];
+  }
+  function hsl2hex(h,s,l){
+    s/=100;l/=100;const a=s*Math.min(l,1-l);
+    const f=n=>{const k=(n+h/30)%12;const c=l-a*Math.max(Math.min(k-3,9-k,1),-1);return Math.round(255*c).toString(16).padStart(2,'0');};
+    return`#${f(0)}${f(8)}${f(4)}`;
+  }
+  const init=color&&color.startsWith('#')?h2hsl(color):[210,80,55];
+  const [hue,setHue]=useState(init[0]);
+  const [lit,setLit]=useState(Math.max(15,Math.min(85,init[2])));
+  const sat=85,sz=220,rad=sz/2-14;
+  const ix=sz/2+rad*Math.sin(hue*Math.PI/180);
+  const iy=sz/2-rad*Math.cos(hue*Math.PI/180);
+  const cur=hsl2hex(hue,sat,lit);
+  const wheelRef=useRef(null);
+  function getHue(e){
+    const rect=wheelRef.current.getBoundingClientRect();
+    const cx=rect.width/2,cy=rect.height/2;
+    const pt=e.touches?e.touches[0]:e;
+    const x=pt.clientX-rect.left-cx,y=pt.clientY-rect.top-cy;
+    return((Math.atan2(x,-y)*180/Math.PI)+360)%360;
+  }
+  function onWheel(e){e.preventDefault();const h=Math.round(getHue(e));setHue(h);onChange(hsl2hex(h,sat,lit));}
+  const stops=Array.from({length:37},(_,i)=>`hsl(${i*10},${sat}%,${lit}%)`).join(',');
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:500,display:"flex",alignItems:"flex-end"}}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#faf7f2",borderRadius:"24px 24px 0 0",padding:"20px 18px 44px",animation:"slideUp 0.3s ease",maxHeight:"85dvh",overflowY:"auto"}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#faf7f2",borderRadius:"24px 24px 0 0",padding:"24px 20px 44px",animation:"slideUp 0.3s ease"}}>
         <div style={{width:36,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 16px"}}/>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-          <div style={{fontSize:14,fontWeight:800,fontFamily:font}}>🎨 今の気分で選ぶ</div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+          <div style={{fontSize:14,fontWeight:800,fontFamily:font}}>🎨 色を選ぶ</div>
           <button onClick={onClose} style={{width:26,height:26,borderRadius:"50%",border:"none",background:"#eee8e0",color:"#aaa",fontSize:13,cursor:"pointer"}}>×</button>
         </div>
-        {MOOD_COLORS.map(m=>(
-          <div key={m.mood} style={{marginBottom:14}}>
-            <div style={{fontSize:11,color:"#888",fontFamily:font,marginBottom:7,fontWeight:600}}>{m.mood}</div>
-            <div style={{display:"flex",gap:9}}>
-              {m.colors.map(c=>(
-                <button key={c} onClick={()=>{onChange(c);onClose();}} style={{width:40,height:40,borderRadius:11,border:"none",cursor:"pointer",background:c,boxShadow:color===c?"0 0 0 3px white,0 0 0 5px "+c:"0 2px 6px rgba(0,0,0,0.18)",transform:color===c?"scale(1.18)":"scale(1)",transition:"all 0.15s",flexShrink:0}}/>
-              ))}
-            </div>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:22}}>
+          <div ref={wheelRef} style={{position:"relative",width:sz,height:sz,borderRadius:"50%",background:`conic-gradient(from -90deg,${stops})`,cursor:"crosshair",touchAction:"none",userSelect:"none",boxShadow:"0 4px 20px rgba(0,0,0,0.12)"}}
+            onMouseDown={onWheel} onMouseMove={e=>e.buttons&&onWheel(e)}
+            onTouchStart={onWheel} onTouchMove={onWheel}
+          >
+            <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:66,height:66,borderRadius:"50%",background:"white",boxShadow:"0 0 0 2px rgba(0,0,0,0.06)"}}/>
+            <div style={{position:"absolute",left:ix-12,top:iy-12,width:24,height:24,borderRadius:"50%",background:cur,border:"3px solid white",boxShadow:"0 0 0 1.5px rgba(0,0,0,0.15),0 2px 8px rgba(0,0,0,0.3)",pointerEvents:"none"}}/>
           </div>
-        ))}
-        <div style={{marginTop:8,paddingTop:14,borderTop:"1px solid #eee8e0",display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:40,height:40,borderRadius:11,background:color,boxShadow:"0 2px 6px rgba(0,0,0,0.18)",flexShrink:0}}/>
-          <button onClick={()=>colorInputRef.current?.click()} style={{flex:1,padding:"10px 0",borderRadius:10,border:"1px solid #e8e0d8",background:"white",fontSize:12,cursor:"pointer",fontFamily:font,color:"#6db85c",fontWeight:600}}>カスタムカラーを選ぶ</button>
-          <input ref={colorInputRef} type="color" value={color} onChange={e=>onChange(e.target.value)} style={{position:"absolute",opacity:0,width:0,height:0,pointerEvents:"none"}}/>
+        </div>
+        <div style={{padding:"0 4px",marginBottom:20}}>
+          <div style={{fontSize:10,color:"#aaa",fontWeight:700,letterSpacing:1,marginBottom:8,fontFamily:font}}>明度</div>
+          <div style={{position:"relative",height:22,display:"flex",alignItems:"center"}}>
+            <div style={{position:"absolute",width:"100%",height:14,borderRadius:7,background:`linear-gradient(to right,hsl(${hue},${sat}%,10%),hsl(${hue},${sat}%,50%),hsl(${hue},${sat}%,90%))`,boxShadow:"inset 0 1px 3px rgba(0,0,0,0.15)"}}/>
+            <input type="range" min={15} max={85} value={lit} onChange={e=>{const l=Number(e.target.value);setLit(l);onChange(hsl2hex(hue,sat,l));}} style={{position:"relative",width:"100%",margin:0,cursor:"pointer",accentColor:cur,zIndex:1,background:"transparent",height:22}}/>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 4px"}}>
+          <div style={{width:44,height:44,borderRadius:12,background:cur,boxShadow:"0 2px 10px rgba(0,0,0,0.18)",flexShrink:0}}/>
+          <div style={{flex:1,fontSize:11,color:"#bbb",fontFamily:"monospace"}}>{cur}</div>
+          <button onClick={onClose} style={{padding:"11px 22px",borderRadius:12,border:"none",background:"#6db85c",color:"white",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:font}}>決定</button>
         </div>
       </div>
     </div>

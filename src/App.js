@@ -958,11 +958,12 @@ export default function App(){
   if(!authReady)return <div style={{minHeight:"100dvh",background:"#faf7f2",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12,fontFamily:font}}><div style={{fontSize:44}}>🌱</div><div style={{fontSize:12,color:"#aaa"}}>読み込み中…</div></div>;
   if(!myUserId)return <LoginScreen/>;
 
-  // タイムライン: 5km圏内 + フォローユーザーの投稿（重複排除・時系列）
+  // タイムライン: 5km圏内 + フォローユーザーの投稿（重複排除・時系列・1週間以内）
+  const oneWeekAgo=Date.now()-7*24*3600*1000;
   const timelineItems=[
     ...nearby,
     ...followingPosts.filter(d=>!nearby.find(n=>n.id===d.id)),
-  ].filter(d=>visibleCats.includes(d.category)).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
+  ].filter(d=>visibleCats.includes(d.category)&&new Date(d.custom_time||d.posted_at).getTime()>=oneWeekAgo).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
   const memoryItems=myDiscoveries.filter(d=>visibleCats.includes(d.category)).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
   const TABS=["ホーム","タイムライン","思い出"];
 

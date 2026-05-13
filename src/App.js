@@ -935,7 +935,7 @@ export default function App(){
       const row={note:note||"📷",category,emoji,photo:photoUrl,lat:lat||null,lng:lng||null,ai_msg:msg,hearts:0,user_id:myUserId||null,user_name:myUserName||null,user_avatar:myAvatar||null,custom_time:customTime||null};
       const saved=await supa("discoveries",{method:"POST",prefer:"return=representation",body:JSON.stringify(row)},token);
       const entry=Array.isArray(saved)?saved[0]:saved;
-      setDiscoveries(prev=>[entry,...prev]);setTimelineDisc(prev=>[entry,...prev]);setMyDiscoveries(prev=>[entry,...prev]);
+      setDiscoveries(prev=>[entry,...prev]);setMyDiscoveries(prev=>[entry,...prev]);
       setShowCapture(false);setShowCaptureLater(false);setAiMsg(msg);setShowAI(true);
     }catch(e){alert("投稿失敗: "+e.message);setShowCapture(false);}
   }

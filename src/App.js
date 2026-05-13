@@ -461,7 +461,7 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
   const [color,setColor]=useState((initialData.emoji&&initialData.emoji.startsWith("#"))?initialData.emoji:getDefaultColor(initialData.category||"flower"));
   const [photo,setPhoto]=useState(initialData.photo||null);
   const [photoEdit,setPhotoEdit]=useState(null);
-  const [showEditor,setShowEditor]=useState(false);
+  const [showEditor,setShowEditor]=useState(!!(initialData.photo&&initialData.photo.startsWith("data:")));
   const [showMoodPicker,setShowMoodPicker]=useState(false);
   const [loading,setLoading]=useState(false);
   const [laterTime,setLaterTime]=useState(initialData.custom_time||initialData.posted_at||"");
@@ -796,6 +796,8 @@ export default function App(){
   const [editTarget,setEditTarget]=useState(null);
   const [showCapture,setShowCapture]=useState(false);
   const [showCaptureLater,setShowCaptureLater]=useState(false);
+  const [initialPhoto,setInitialPhoto]=useState(null);
+  const globalCameraRef=useRef(null);
   const [showWeatherPanel,setShowWeatherPanel]=useState(false);
   const [showProfile,setShowProfile]=useState(false);
   const [profileTarget,setProfileTarget]=useState({id:null,name:null});
@@ -1003,7 +1005,7 @@ export default function App(){
               <span style={{fontSize:18}}>🗒️</span>
               <span style={{fontSize:10,fontWeight:500,fontFamily:font}}>タイムライン</span>
             </button>
-            <button onClick={()=>setShowCapture(true)} style={{width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:26,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",display:"flex",alignItems:"center",justifyContent:"center",marginLeft:"auto"}}>+</button>
+            <button onClick={()=>globalCameraRef.current?.click()} style={{width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:26,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",display:"flex",alignItems:"center",justifyContent:"center",marginLeft:"auto"}}>+</button>
           </div>
         </div>
       )}
@@ -1025,7 +1027,7 @@ export default function App(){
             {tab===2&&<div style={{background:"#c8a882",minHeight:"100%",padding:"10px 8px 80px"}}><CorkBoard items={memoryItems} onItemClick={setSelected} showUser={false}/></div>}
           </div>
           {!showCapture&&!showAI&&!selected&&!showWeatherPanel&&!showProfile&&!editTarget&&(
-            <button onClick={()=>setShowCapture(true)} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px) + 22px)",right:18,width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:24,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",zIndex:50,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+            <button onClick={()=>globalCameraRef.current?.click()} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px) + 22px)",right:18,width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#7dcc6a,#5aaa48)",color:"white",fontSize:24,fontWeight:700,boxShadow:"0 4px 16px rgba(109,184,92,0.45)",zIndex:50,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
           )}
         </>
       )}
@@ -1044,7 +1046,8 @@ export default function App(){
           </div>
         </div>
       )}
-      {showCapture&&<PostForm userLocation={userLocation} locStatus={locStatus} onSave={handleSave} onClose={()=>setShowCapture(false)}/>}
+      <input ref={globalCameraRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=ev=>{setInitialPhoto(ev.target.result);setShowCapture(true);};r.readAsDataURL(f);e.target.value="";}}/>
+      {showCapture&&<PostForm initialData={initialPhoto?{photo:initialPhoto}:{}} userLocation={userLocation} locStatus={locStatus} onSave={handleSave} onClose={()=>{setShowCapture(false);setInitialPhoto(null);}}/>}
       {showCaptureLater&&<PostForm laterMode userLocation={userLocation} locStatus={locStatus} onSave={handleSave} onClose={()=>setShowCaptureLater(false)} title="後から投稿する 🕐"/>}
       <style>{`@keyframes slideUp{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}.leaflet-container{font-family:${font}!important}.leaflet-control-attribution{font-size:9px!important}.leaflet-top,.leaflet-bottom{z-index:400!important}.leaflet-pane{z-index:300!important}`}</style>
     </div>

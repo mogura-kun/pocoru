@@ -650,7 +650,7 @@ function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,
     };reader.readAsDataURL(f);
   }
 
-  const userDisc=discoveries.filter(d=>d.user_id===userId);
+  const userDisc=discoveries.filter(d=>d.user_id===userId).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
 
   if(showFollowList){
     return(
@@ -962,8 +962,8 @@ export default function App(){
   const timelineItems=[
     ...nearby,
     ...followingPosts.filter(d=>!nearby.find(n=>n.id===d.id)),
-  ].filter(d=>visibleCats.includes(d.category)).sort((a,b)=>new Date(b.posted_at)-new Date(a.posted_at));
-  const memoryItems=myDiscoveries.filter(d=>visibleCats.includes(d.category));
+  ].filter(d=>visibleCats.includes(d.category)).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
+  const memoryItems=myDiscoveries.filter(d=>visibleCats.includes(d.category)).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
   const TABS=["ホーム","タイムライン","思い出"];
 
   return(

@@ -252,10 +252,9 @@ function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater
         </div>
         <div style={{flex:1,padding:"8px 0",overflowY:"auto"}}>
           {[
-            {emoji:"🗒️",label:"タイムライン",sub:"近くの発見 1週間",action:()=>{onClose();onSetTab(1);}},
+            {emoji:"🕐",label:"後から投稿",sub:"日時・場所を指定して投稿",action:()=>{onClose();onCaptureLater();}},
             {emoji:"📖",label:"思い出",sub:"自分の発見・永久保存",action:()=>{onClose();onSetTab(2);}},
             {emoji:"👤",label:"マイページ",sub:"他の人から見た自分",action:()=>{onClose();onOpenProfile();}},
-            {emoji:"🕐",label:"後から投稿",sub:"日時・場所を指定して投稿",action:()=>{onClose();onCaptureLater();}},
           ].map((m,i)=>(
             <button key={i} onClick={m.action||onClose} style={{width:"100%",padding:"13px 20px",border:"none",background:"transparent",textAlign:"left",cursor:"pointer",display:"flex",alignItems:"center",gap:12,fontFamily:font}}>
               <span style={{fontSize:18}}>{m.emoji}</span>

@@ -58,13 +58,13 @@ function useLeaflet(cb){
 
 const CATEGORIES=[
   {value:"flower", label:"花",     defaultColor:"#e06080"},
-  {value:"bird",   label:"鳥",     defaultColor:"#4a9cc7"},
-  {value:"fish",   label:"魚",     defaultColor:"#3ab8a0"},
-  {value:"cloud",  label:"雲",     defaultColor:"#7ab0d4"},
-  {value:"plane",  label:"飛行機", defaultColor:"#8b7cc8"},
-  {value:"music",  label:"音符",   defaultColor:"#9b72cc"},
-  {value:"sparkle",label:"きらめき",defaultColor:"#f5b942"},
-  {value:"bread",  label:"パン",   defaultColor:"#c9813a"},
+  {value:"bird",   label:"いきもの", defaultColor:"#4a9cc7"},
+  {value:"fish",   label:"さかな",   defaultColor:"#3ab8a0"},
+  {value:"cloud",  label:"雲",       defaultColor:"#7ab0d4"},
+  {value:"plane",  label:"空",       defaultColor:"#8b7cc8"},
+  {value:"music",  label:"気分",     defaultColor:"#9b72cc"},
+  {value:"sparkle",label:"ひらめき", defaultColor:"#f5b942"},
+  {value:"bread",  label:"たべもの", defaultColor:"#c9813a"},
 ];
 const CAT=Object.fromEntries(CATEGORIES.map(c=>[c.value,c]));
 const cl=v=>CAT[v]?.label||"その他";
@@ -498,6 +498,7 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
   const [laterTime,setLaterTime]=useState(initialData.custom_time||initialData.posted_at||"");
   const [laterLat,setLaterLat]=useState(initialData.lat||userLocation?.lat||35.6812);
   const [laterLng,setLaterLng]=useState(initialData.lng||userLocation?.lng||139.7671);
+  const [noLoc,setNoLoc]=useState(false);
   const cameraRef=useRef(null),albumRef=useRef(null);
   const isEdit=!!initialData.id;
 
@@ -507,8 +508,8 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
   async function handleSave(){
     if(!note.trim()&&!photo)return;
     setLoading(true);
-    const lat=laterMode?laterLat:(userLocation?.lat?jitter(userLocation.lat):null);
-    const lng=laterMode?laterLng:(userLocation?.lng?jitter(userLocation.lng):null);
+    const lat=laterMode?(noLoc?null:laterLat):(userLocation?.lat?jitter(userLocation.lat):null);
+    const lng=laterMode?(noLoc?null:laterLng):(userLocation?.lng?jitter(userLocation.lng):null);
     await onSave({note:note||"📷",category,emoji:color,photo:photoEdit?.croppedPhoto||photo,photoEdit,lat,lng,customTime:(laterMode&&laterTime)?laterTime:null});
     setLoading(false);
   }
@@ -540,9 +541,15 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
             <input type="datetime-local" value={laterTime} onChange={e=>setLaterTime(e.target.value)} style={{width:"100%",padding:"8px 11px",borderRadius:10,border:"1px solid #e8e0d8",fontSize:12,fontFamily:font,outline:"none",boxSizing:"border-box",color:"#3a3028"}}/>
           </div>
           <div style={{marginBottom:11}}>
-            <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>📍 場所を指定</div>
-            <LocationSearch onSelect={(la,lo)=>{setLaterLat(la);setLaterLng(lo);}}/>
-            <PinEditMap lat={laterLat||35.6812} lng={laterLng||139.7671} onMove={(la,lo)=>{setLaterLat(la);setLaterLng(lo);}}/>
+            <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:8}}>
+              <input type="checkbox" checked={noLoc} onChange={e=>setNoLoc(e.target.checked)} style={{width:16,height:16,cursor:"pointer",accentColor:"#6db85c"}}/>
+              <span style={{fontSize:12,color:"#888",fontFamily:font}}>📍 場所を指定しない</span>
+            </label>
+            {!noLoc&&<>
+              <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>📍 場所を指定</div>
+              <LocationSearch onSelect={(la,lo)=>{setLaterLat(la);setLaterLng(lo);}}/>
+              <PinEditMap lat={laterLat||35.6812} lng={laterLng||139.7671} onMove={(la,lo)=>{setLaterLat(la);setLaterLng(lo);}}/>
+            </>}
           </div>
         </>}
         <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{display:"none"}}/>
@@ -567,8 +574,9 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
         <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:6,fontFamily:font}}>モチーフ</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:10}}>
           {CATEGORIES.map(c=>{const sel=category===c.value;const col=sel?color:c.defaultColor;return(
-            <button key={c.value} onClick={()=>handleCat(c.value)} style={{padding:"12px 4px",borderRadius:12,border:"none",cursor:"pointer",background:sel?getBg(color):"white",boxShadow:sel?`0 0 0 2.5px ${color}`:"0 1px 4px rgba(0,0,0,0.08)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <MotifIcon motif={c.value} color={col} size={28} shadow={sel}/>
+            <button key={c.value} onClick={()=>handleCat(c.value)} style={{padding:"10px 4px",borderRadius:12,border:"none",cursor:"pointer",background:sel?getBg(color):"white",boxShadow:sel?`0 0 0 2.5px ${color}`:"0 1px 4px rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
+              <MotifIcon motif={c.value} color={col} size={24} shadow={sel}/>
+              <span style={{fontSize:10,color:col,fontWeight:sel?700:400,fontFamily:font,lineHeight:1}}>{c.label}</span>
             </button>
           );})}
         </div>
@@ -1027,8 +1035,8 @@ export default function App(){
             </div>
             <div style={{display:"flex",gap:6,padding:"6px 12px 10px",overflowX:"auto"}}>
               {CATEGORIES.map(c=>{const on=visibleCats.includes(c.value);return(
-                <button key={c.value} onClick={()=>toggleCat(c.value)} style={{flexShrink:0,display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:20,border:"none",cursor:"pointer",background:on?getBg(c.defaultColor):"#ede8e0",color:on?c.defaultColor:"#aaa",fontWeight:on?700:400,fontSize:12,fontFamily:font,opacity:on?1:0.7,transition:"all 0.15s"}}>
-                  <MotifIcon motif={c.value} color={on?c.defaultColor:"#aaa"} size={14}/><span>{c.label}</span>
+                <button key={c.value} onClick={()=>toggleCat(c.value)} style={{flexShrink:0,width:40,height:40,borderRadius:"50%",border:"none",cursor:"pointer",background:on?getBg(c.defaultColor):"#ede8e0",display:"flex",alignItems:"center",justifyContent:"center",opacity:on?1:0.5,transition:"all 0.15s",boxShadow:on?`0 0 0 2px ${c.defaultColor}`:"none"}}>
+                  <MotifIcon motif={c.value} color={on?c.defaultColor:"#aaa"} size={22}/>
                 </button>
               );})}
             </div>

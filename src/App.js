@@ -1036,7 +1036,7 @@ export default function App(){
             <div style={{display:"flex",gap:6,padding:"6px 12px 10px",overflowX:"auto"}}>
               {CATEGORIES.map(c=>{const on=visibleCats.includes(c.value);return(
                 <button key={c.value} onClick={()=>toggleCat(c.value)} style={{flexShrink:0,width:36,height:36,border:"none",cursor:"pointer",background:"none",display:"flex",alignItems:"center",justifyContent:"center",opacity:on?1:0.25,transition:"opacity 0.15s",padding:0}}>
-                  <MotifIcon motif={c.value} color="#3a3028" size={28}/>
+                  <MotifIcon motif={c.value} color="#a09888" size={28}/>
                 </button>
               );})}
             </div>

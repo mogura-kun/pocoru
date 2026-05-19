@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 
-const SUPA_URL = "https://zchzntvqitytoolehdba.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjaHpudHZxaXR5dG9vbGVoZGJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NDczNDgsImV4cCI6MjA5MjMyMzM0OH0.TXIX1eRw5jSDIyVNGGbC0yMb6ZgGZBFUsdPZRgr4MrE";
+const SUPA_URL = process.env.REACT_APP_SUPA_URL;
+const SUPA_KEY = process.env.REACT_APP_SUPA_KEY;
 const AUTH_URL = `${SUPA_URL}/auth/v1`;
 const APP_URL    = window.location.origin;
-const GEMINI_KEY = "AIzaSyBZksp5hMY9dMYw-g06gug4cvJCL8EzTmU";
+const GEMINI_KEY = process.env.REACT_APP_GEMINI_KEY;
 const font       = "'Hiragino Maru Gothic Pro','Noto Sans JP',sans-serif";
 
 async function supa(path, opts={}, token=null){

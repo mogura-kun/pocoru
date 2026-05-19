@@ -575,8 +575,8 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:10}}>
           {CATEGORIES.map(c=>{const sel=category===c.value;const col=sel?color:c.defaultColor;return(
             <button key={c.value} onClick={()=>handleCat(c.value)} style={{padding:"10px 4px",borderRadius:12,border:"none",cursor:"pointer",background:sel?getBg(color):"white",boxShadow:sel?`0 0 0 2.5px ${color}`:"0 1px 4px rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
-              <MotifIcon motif={c.value} color={col} size={24} shadow={sel}/>
-              <span style={{fontSize:10,color:col,fontWeight:sel?700:400,fontFamily:font,lineHeight:1}}>{c.label}</span>
+              <MotifIcon motif={c.value} color={sel?"#3a3028":"#bbb"} size={24}/>
+              <span style={{fontSize:10,color:sel?"#3a3028":"#bbb",fontWeight:sel?700:400,fontFamily:font,lineHeight:1}}>{c.label}</span>
             </button>
           );})}
         </div>
@@ -1036,7 +1036,7 @@ export default function App(){
             <div style={{display:"flex",gap:6,padding:"6px 12px 10px",overflowX:"auto"}}>
               {CATEGORIES.map(c=>{const on=visibleCats.includes(c.value);return(
                 <button key={c.value} onClick={()=>toggleCat(c.value)} style={{flexShrink:0,width:40,height:40,borderRadius:"50%",border:"none",cursor:"pointer",background:on?getBg(c.defaultColor):"#ede8e0",display:"flex",alignItems:"center",justifyContent:"center",opacity:on?1:0.5,transition:"all 0.15s",boxShadow:on?`0 0 0 2px ${c.defaultColor}`:"none"}}>
-                  <MotifIcon motif={c.value} color={on?c.defaultColor:"#aaa"} size={22}/>
+                  <MotifIcon motif={c.value} color={on?"#3a3028":"#ccc"} size={22}/>
                 </button>
               );})}
             </div>

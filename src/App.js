@@ -3,8 +3,9 @@ import { useState, useEffect, useRef } from "react";
 const SUPA_URL = "https://zchzntvqitytoolehdba.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjaHpudHZxaXR5dG9vbGVoZGJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NDczNDgsImV4cCI6MjA5MjMyMzM0OH0.TXIX1eRw5jSDIyVNGGbC0yMb6ZgGZBFUsdPZRgr4MrE";
 const AUTH_URL = `${SUPA_URL}/auth/v1`;
-const APP_URL  = window.location.origin;
-const font     = "'Hiragino Maru Gothic Pro','Noto Sans JP',sans-serif";
+const APP_URL    = window.location.origin;
+const GEMINI_KEY = "AIzaSyBZksp5hMY9dMYw-g06gug4cvJCL8EzTmU";
+const font       = "'Hiragino Maru Gothic Pro','Noto Sans JP',sans-serif";
 
 async function supa(path, opts={}, token=null){
   const res = await fetch(`${SUPA_URL}/rest/v1/${path}`,{
@@ -842,7 +843,7 @@ export default function App(){
   const [userLocation,setUserLocation]=useState(null);
   const [locStatus,setLocStatus]=useState("idle");
   const [visibleCats,setVisibleCats]=useState(CATEGORIES.map(c=>c.value));
-  const watchIdRef=useRef(null),centerMeRef=useRef(null),sessionRef=useRef(null);
+  const watchIdRef=useRef(null),centerMeRef=useRef(null),sessionRef=useRef(null),lastPostRef=useRef(0);
 
   useEffect(()=>{
     if(!navigator.geolocation){setLocStatus("denied");return;}
@@ -959,8 +960,18 @@ export default function App(){
   }
 
   async function handleSave({note,category,emoji,photo,photoEdit,lat,lng,customTime}){
+    const now=Date.now();
+    if(now-lastPostRef.current<10000){alert(`続けて投稿するには${Math.ceil((10000-(now-lastPostRef.current))/1000)}秒待ってください`);return;}
+    lastPostRef.current=now;
     let msg="素敵な発見！今日が少し特別な日になりましたね。";
-    try{const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:`「${cl(category)}」について面白い豆知識・雑学・またはクスっとするギャグを1〜2文で日本語で。友達トーンで。${note!=="📷"?"発見:"+note+"。":""}前置きや締め不要。`}]})});const data=await res.json();if(data.content?.[0]?.text)msg=data.content[0].text;}catch{}
+    try{
+      const prompt=`「${cl(category)}」に関連した面白い豆知識・雑学、またはクスっとするギャグを1〜2文で日本語で返して。友達に話すような軽いトーンで。${note&&note!=="📷"?`発見メモ:「${note}」。`:""}前置きや締めの言葉は不要。`;
+      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+      const data=await res.json();
+      const text=data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if(text)msg=text.trim();
+      else console.error("Gemini response error:",data);
+    }catch(e){console.error("Gemini API error:",e);}
     try{
       const token=sessionRef.current?.access_token||null;
       const finalPhoto=photoEdit?.croppedPhoto||photo||null;

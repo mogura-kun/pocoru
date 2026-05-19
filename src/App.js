@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 const SUPA_URL = "https://zchzntvqitytoolehdba.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjaHpudHZxaXR5dG9vbGVoZGJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NDczNDgsImV4cCI6MjA5MjMyMzM0OH0.TXIX1eRw5jSDIyVNGGbC0yMb6ZgGZBFUsdPZRgr4MrE";
 const AUTH_URL = `${SUPA_URL}/auth/v1`;
-const APP_URL  = "https://pocoru.vercel.app";
+const APP_URL  = window.location.origin;
 const font     = "'Hiragino Maru Gothic Pro','Noto Sans JP',sans-serif";
 
 async function supa(path, opts={}, token=null){
@@ -164,7 +164,7 @@ function MoodColorPicker({color,onChange,onClose}){
           <button onClick={onClose} style={{width:26,height:26,borderRadius:"50%",border:"none",background:"#eee8e0",color:"#aaa",fontSize:13,cursor:"pointer"}}>×</button>
         </div>
         <div style={{display:"flex",justifyContent:"center",marginBottom:22}}>
-          <div ref={wheelRef} style={{position:"relative",width:sz,height:sz,borderRadius:"50%",background:`conic-gradient(from -90deg,${stops})`,cursor:"crosshair",touchAction:"none",userSelect:"none",boxShadow:"0 4px 20px rgba(0,0,0,0.12)"}}
+          <div ref={wheelRef} style={{position:"relative",width:sz,height:sz,borderRadius:"50%",background:`conic-gradient(from 0deg,${stops})`,cursor:"crosshair",touchAction:"none",userSelect:"none",boxShadow:"0 4px 20px rgba(0,0,0,0.12)"}}
             onMouseDown={onWheel} onMouseMove={e=>e.buttons&&onWheel(e)}
             onTouchStart={onWheel} onTouchMove={onWheel}
           >
@@ -234,8 +234,8 @@ function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick
     if(!rdy||!iRef.current||!userLocation)return;
     const L=window.L,{lat,lng,accuracy}=userLocation;
     if(uCi.current)uCi.current.remove();if(uMk.current)uMk.current.remove();
-    uCi.current=L.circle([lat,lng],{radius:accuracy||20,color:"#6db85c",fillColor:"#6db85c",fillOpacity:0.1,weight:1.5,dashArray:"4 4"}).addTo(iRef.current);
-    uMk.current=L.marker([lat,lng],{icon:L.divIcon({className:"",html:`<div style="font-size:22px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.35));transform:translateY(-8px)">📍</div>`,iconSize:[22,30],iconAnchor:[11,28]})}).addTo(iRef.current);
+    uCi.current=null;
+    uMk.current=L.marker([lat,lng],{icon:L.divIcon({className:"mk-wrap",html:`<div style="position:relative;width:56px;height:56px"><div style="position:absolute;inset:6px;border-radius:50%;background:#6db85c;filter:blur(16px);opacity:0.27"></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="font-size:22px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">📍</div></div></div>`,iconSize:[56,56],iconAnchor:[28,28]})}).addTo(iRef.current);
   },[rdy,userLocation]);
   useEffect(()=>{
     if(!rdy||!iRef.current)return;
@@ -247,7 +247,8 @@ function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick
       const op=Math.max(0.3,1-(age/(7*24*3600000))*0.7);
       const color=getColor(d);
       const m=MOTIF_SVG[d.category]||MOTIF_SVG.sparkle;
-      const icon=L.divIcon({className:"",html:`<div style="opacity:${op};width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="38" height="38" viewBox="${m.vb}" fill="${color}" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,0.45))">${m.d}</svg></div>`,iconSize:[44,44],iconAnchor:[22,22]});
+      const sz=80,iconOp=Math.max(0,(op-0.3)/0.7).toFixed(3);
+      const icon=L.divIcon({className:"",html:`<div style="position:relative;width:${sz}px;height:${sz}px;display:flex;align-items:center;justify-content:center"><div style="position:absolute;width:90px;height:90px;border-radius:50%;background:${color};filter:blur(20px);opacity:0.12;animation:auraExpand 1.5s ease-out forwards"></div><div style="position:relative;z-index:2;opacity:${iconOp}"><svg width="34" height="34" viewBox="${m.vb}" fill="${color}">${m.d}</svg></div></div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
       dMk.current.push(L.marker([d.lat,d.lng],{icon}).addTo(iRef.current).on("click",()=>onPinClick(d)));
     });
   },[rdy,discoveries,visibleCats,userLocation]);
@@ -306,9 +307,7 @@ function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater
 // 詳細モーダル: z-index 350でProfileModalより上に表示、写真大きく
 function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onViewUser,onEdit}){
   const already=myHearts.includes(item.id);
-  const age=Date.now()-new Date(item.posted_at).getTime();
   const timeStr=item.custom_time?`${new Date(item.custom_time).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"})} ${roundTimeStr(new Date(item.custom_time))}`:roundTimeStr(new Date(item.posted_at));
-  const op=Math.max(0.3,1-(age/(7*24*3600000))*0.7);
   const wEmoji=WEATHERS.find(w=>w.value===item.weather)?.emoji;
   const colors=["yellow","pink","blue","green","orange"];
   return(
@@ -317,7 +316,7 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
         <div style={{width:40,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 18px"}}/>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:44,height:44,borderRadius:13,background:getBg(getColor(item)),display:"flex",alignItems:"center",justifyContent:"center",opacity:op}}><MotifIcon motif={item.category} color={getColor(item)} size={24} shadow/></div>
+            <div style={{width:44,height:44,borderRadius:13,background:getBg(getColor(item)),display:"flex",alignItems:"center",justifyContent:"center",opacity:1}}><MotifIcon motif={item.category} color={getColor(item)} size={24} shadow/></div>
             <div>
               <div style={{fontSize:12,fontWeight:700,color:getColor(item),fontFamily:font}}>{cl(item.category)}</div>
               <div style={{fontSize:11,color:"#bbb",fontFamily:font}}>{timeStr}{wEmoji&&<span style={{marginLeft:5}}>{wEmoji}</span>}</div>
@@ -336,7 +335,7 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
           </div>
         </div>
         {/* 写真: 大きく表示 */}
-        <div style={{marginBottom:12,opacity:op}}>
+        <div style={{marginBottom:12,opacity:1}}>
           {item.photo
             ?<div style={{background:"white",padding:"8px 8px 32px",boxShadow:"0 4px 20px rgba(0,0,0,0.18)",borderRadius:2,transform:"rotate(-1deg)"}}>
                 <img src={item.photo} alt="" style={{width:"100%",height:240,objectFit:"cover",display:"block",borderRadius:1}}/>
@@ -348,7 +347,7 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
               </div>
           }
         </div>
-        <div style={{marginBottom:12,opacity:op}}><StickyNote text={item.note} colorKey={colors[Math.abs((item.id||"").charCodeAt?.(0)||0)%5]} rotate={-1}/></div>
+        <div style={{marginBottom:12,opacity:1}}><StickyNote text={item.note} colorKey={colors[Math.abs((item.id||"").charCodeAt?.(0)||0)%5]} rotate={-1}/></div>
         <div style={{background:getBg(getColor(item)),borderRadius:13,padding:"11px 13px",marginBottom:16,borderLeft:`4px solid ${getColor(item)}`}}>
           <div style={{fontSize:10,color:getColor(item),fontWeight:700,letterSpacing:1,marginBottom:3,fontFamily:font}}>✦ ひとこと</div>
           <p style={{margin:0,fontSize:13,lineHeight:1.7,color:"#3a3028",fontStyle:"italic",fontFamily:font}}>{item.ai_msg}</p>
@@ -930,7 +929,7 @@ export default function App(){
     return()=>{clearInterval(t1);clearInterval(t2);};
   },[authReady,myUserId]);
 
-  const nearby=discoveries.filter(d=>{if(!userLocation)return true;if(!d.lat||!d.lng)return true;return haversine(userLocation.lat,userLocation.lng,d.lat,d.lng)<=5;});
+  const nearby=discoveries.filter(d=>{if(!d.lat||!d.lng)return false;if(!userLocation)return true;return haversine(userLocation.lat,userLocation.lng,d.lat,d.lng)<=5;});
   function toggleCat(v){setVisibleCats(prev=>prev.includes(v)?prev.length>1?prev.filter(x=>x!==v):prev:[...prev,v]);}
 
   async function handleHeart(id){
@@ -1080,7 +1079,7 @@ export default function App(){
       <input ref={globalCameraRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=ev=>{setInitialPhoto(ev.target.result);setShowCapture(true);};r.readAsDataURL(f);e.target.value="";}}/>
       {showCapture&&<PostForm initialData={initialPhoto?{photo:initialPhoto}:{}} userLocation={userLocation} locStatus={locStatus} onSave={handleSave} onClose={()=>{setShowCapture(false);setInitialPhoto(null);}}/>}
       {showCaptureLater&&<PostForm laterMode userLocation={userLocation} locStatus={locStatus} onSave={handleSave} onClose={()=>setShowCaptureLater(false)} title="後から投稿する 🕐"/>}
-      <style>{`@keyframes slideUp{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}.leaflet-container{font-family:${font}!important}.leaflet-control-attribution{font-size:9px!important}.leaflet-top,.leaflet-bottom{z-index:400!important}.leaflet-pane{z-index:300!important}`}</style>
+      <style>{`@keyframes slideUp{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}@keyframes auraExpand{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:0.3}}.leaflet-container{font-family:${font}!important}.leaflet-control-attribution{font-size:9px!important}.leaflet-top,.leaflet-bottom{z-index:400!important}.leaflet-pane{z-index:300!important}`}</style>
     </div>
   );
 }

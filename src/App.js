@@ -4,7 +4,6 @@ const SUPA_URL = process.env.REACT_APP_SUPA_URL;
 const SUPA_KEY = process.env.REACT_APP_SUPA_KEY;
 const AUTH_URL = `${SUPA_URL}/auth/v1`;
 const APP_URL    = window.location.origin;
-const GEMINI_KEY = process.env.REACT_APP_GEMINI_KEY;
 const font       = "'Hiragino Maru Gothic Pro','Noto Sans JP',sans-serif";
 
 async function supa(path, opts={}, token=null){
@@ -974,7 +973,7 @@ export default function App(){
     let msg="素敵な発見！今日が少し特別な日になりましたね。";
     try{
       const prompt=`「${cl(category)}」に関連した面白い豆知識・雑学、またはクスっとするギャグを1〜2文で日本語で返して。友達に話すような軽いトーンで。${note&&note!=="📷"?`発見メモ:「${note}」。`:""}前置きや締めの言葉は不要。`;
-      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+      const res=await fetch("/api/gemini",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
       const data=await res.json();
       const text=data.candidates?.[0]?.content?.parts?.[0]?.text;
       if(text)msg=text.trim();

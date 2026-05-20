@@ -1072,8 +1072,8 @@ export default function App(){
               <div style={{fontSize:17,fontWeight:800}}>{TABS[tab]}</div>
               <button onClick={()=>setMenuOpen(true)} style={{width:32,height:32,borderRadius:9,border:"none",background:"#f0ebe5",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>≡</button>
             </div>
-            <div style={{display:"flex",gap:5,padding:"0 12px 10px",overflowX:"auto"}}>
-              {CATEGORIES.map(c=>{const on=visibleCats.includes(c.value);return <button key={c.value} onClick={()=>toggleCat(c.value)} style={{flexShrink:0,width:30,height:30,borderRadius:9,border:"none",cursor:"pointer",background:on?"#f5ece0":"rgba(0,0,0,0.05)",opacity:on?1:0.5,boxShadow:on?"0 1px 4px rgba(0,0,0,0.12)":"none",display:"flex",alignItems:"center",justifyContent:"center"}}><MotifIcon motif={c.value} color={on?c.defaultColor:"#aaa"} size={16}/></button>;})}
+            <div style={{display:"flex",gap:6,padding:"0 12px 10px",overflowX:"auto"}}>
+              {CATEGORIES.map(c=>{const on=visibleCats.includes(c.value);return <button key={c.value} onClick={()=>toggleCat(c.value)} style={{flexShrink:0,width:36,height:36,border:"none",cursor:"pointer",background:"none",display:"flex",alignItems:"center",justifyContent:"center",opacity:on?1:0.25,transition:"opacity 0.15s",padding:0}}><MotifIcon motif={c.value} color="#a09888" size={28}/></button>;})}
             </div>
           </div>
           <div style={{flex:1,overflowY:"auto",paddingBottom:80,minHeight:0}}>

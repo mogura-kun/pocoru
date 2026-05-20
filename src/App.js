@@ -1078,7 +1078,7 @@ export default function App(){
           </div>
           <div style={{flex:1,overflowY:"auto",paddingBottom:80,minHeight:0}}>
             {tab===1&&<div style={{background:"#7db9e3",minHeight:"100%",padding:"10px 8px 80px"}}><CorkBoard items={timelineItems} onItemClick={setSelected} showUser={true}/></div>}
-            {tab===2&&<div style={{background:"#7de3b8",minHeight:"100%",padding:"10px 8px 80px"}}><CorkBoard items={memoryItems} onItemClick={setSelected} showUser={false}/></div>}
+            {tab===2&&<div style={{background:"#99d0bc",minHeight:"100%",padding:"10px 8px 80px"}}><CorkBoard items={memoryItems} onItemClick={setSelected} showUser={false}/></div>}
           </div>
           {!showCapture&&!showAI&&!selected&&!showWeatherPanel&&!showProfile&&!editTarget&&(
             <button onClick={()=>globalCameraRef.current?.click()} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px) + 22px)",right:18,width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#94c286,#72966a)",color:"white",fontSize:24,fontWeight:700,boxShadow:"0 4px 16px rgba(138,170,122,0.45)",zIndex:50,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>

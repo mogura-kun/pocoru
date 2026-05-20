@@ -352,10 +352,11 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
           <div style={{fontSize:10,color:getColor(item),fontWeight:700,letterSpacing:1,marginBottom:3,fontFamily:font}}>✦ ひとこと</div>
           <p style={{margin:0,fontSize:13,lineHeight:1.7,color:"#3a3028",fontStyle:"italic",fontFamily:font}}>{item.ai_msg}</p>
         </div>
-        <button onClick={()=>!already&&onHeart(item.id)} style={{width:"100%",padding:"14px 0",borderRadius:16,border:"none",cursor:already?"default":"pointer",background:already?"#f4e0e2":"white",boxShadow:already?"0 0 0 2px #d4848a inset":"0 2px 12px rgba(0,0,0,0.1)",transition:"all 0.2s",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-          <span style={{fontSize:26,transform:already?"scale(1.2)":"scale(1)",transition:"transform 0.2s"}}>{already?"❤️":"🤍"}</span>
-          <div style={{textAlign:"left"}}><div style={{fontSize:14,fontWeight:700,color:already?"#d4848a":"#888",fontFamily:font}}>{already?"ありがとう":"いいね"}</div><div style={{fontSize:11,color:"#bbb",fontFamily:font}}>{item.hearts||0}人が共感</div></div>
-        </button>
+        <div style={{textAlign:"right",marginTop:4}}>
+          <button onClick={()=>!already&&onHeart(item.id)} style={{border:"none",background:"none",cursor:already?"default":"pointer",fontSize:12,color:already?"#d4848a":"#ccc",fontFamily:font,padding:"4px 8px",letterSpacing:1,transition:"color 0.2s"}}>
+            ♥ {item.hearts||0}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -769,7 +770,6 @@ function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,
                     <Polaroid photo={d.photo} emoji={d.emoji} category={d.category}/>
                   </div>
                   {d.note&&d.note!=="📷"&&<div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}><StickyNote text={d.note} colorKey={stickyColors[i%stickyColors.length]}/></div>}
-                  <div style={{fontSize:9,color:"rgba(255,255,255,0.8)",marginTop:4,fontFamily:font,textAlign:"center"}}>❤️{d.hearts||0}</div>
                 </div>
               );
             })}
@@ -811,10 +811,7 @@ function CorkBoard({items,onItemClick,showUser=false}){
               <Polaroid photo={d.photo} emoji={d.emoji} category={d.category}/>
             </div>
             {d.note&&d.note!=="📷"&&<div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}><StickyNote text={d.note} colorKey={stickyColors[i%stickyColors.length]}/></div>}
-            <div style={{fontSize:9,color:"rgba(255,255,255,0.8)",marginTop:4,fontFamily:font,textAlign:"center",display:"flex",alignItems:"center",gap:3}}>
-              {showUser&&d.user_name&&<span style={{opacity:0.9,maxWidth:60,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.user_name}</span>}
-              <span>❤️{d.hearts||0}</span>
-            </div>
+            {showUser&&d.user_name&&<div style={{fontSize:9,color:"rgba(255,255,255,0.8)",marginTop:4,fontFamily:font,textAlign:"center",opacity:0.9,maxWidth:60,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.user_name}</div>}
           </div>
         );
       })}

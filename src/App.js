@@ -44,6 +44,16 @@ function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
 async function refreshToken(rt){
   try{const res=await fetch(`${AUTH_URL}/token?grant_type=refresh_token`,{method:"POST",headers:{"apikey":SUPA_KEY,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:rt})});if(!res.ok)return null;return await res.json();}catch{return null;}
 }
+async function getValidToken(sessionRef){
+  const sess=sessionRef.current;
+  if(!sess)return null;
+  if(sess.expires_at&&Date.now()>sess.expires_at-60000){
+    const refreshed=await refreshToken(sess.refresh_token);
+    if(refreshed){saveSession(refreshed);sessionRef.current=refreshed;return refreshed.access_token;}
+    return null;
+  }
+  return sess.access_token;
+}
 function googleLogin(){window.location.href=`${AUTH_URL}/authorize?provider=google&redirect_to=${encodeURIComponent(APP_URL)}`;}
 async function googleLogout(token){try{await fetch(`${AUTH_URL}/logout`,{method:"POST",headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${token}`}});}catch{}saveSession(null);}
 
@@ -113,8 +123,8 @@ function Polaroid({photo,emoji,category,rotate=0,small=false,note="",userName=""
   const color=emoji&&emoji.startsWith("#")?emoji:getDefaultColor(category);
   const hasNote=note&&note!=="📷";
   return(
-    <div style={{display:"inline-block",background:"white",padding:small?"6px 6px 6px":"10px 10px 6px",boxShadow:"0 3px 12px rgba(0,0,0,0.10)",borderRadius:2,transform:`rotate(${rotate}deg)`,position:"relative"}}>
-      {userName&&<div style={{position:"absolute",top:2,left:4,fontSize:7,color:"#b0a49a",fontFamily:font,maxWidth:w*0.6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{userName}</div>}
+    <div style={{display:"inline-block",background:"white",padding:small?"16px 6px 6px":"18px 10px 6px",boxShadow:"0 3px 12px rgba(0,0,0,0.10)",borderRadius:2,transform:`rotate(${rotate}deg)`,position:"relative"}}>
+      {userName&&<div style={{position:"absolute",top:3,left:5,fontSize:7,color:"#b0a49a",fontFamily:font,maxWidth:w*0.9,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{userName}</div>}
       <div style={{position:"relative",width:w,height:h}}>
         {photo?<img src={photo} alt="" style={{width:w,height:h,objectFit:"cover",display:"block"}}/>
           :<div style={{width:w,height:h,background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center"}}><MotifIcon motif={category} color={color} size={small?36:56} shadow/></div>}
@@ -982,13 +992,14 @@ export default function App(){
     try{
       const prompt=`「${cl(category)}」に関連した面白い豆知識・雑学、またはクスっとするギャグを1〜2文で日本語で返して。友達に話すような軽いトーンで。${note&&note!=="📷"?`発見メモ:「${note}」。`:""}前置きや締めの言葉は不要。`;
       const res=await fetch("/api/gemini",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
+      if(!res.ok||!res.headers.get("content-type")?.includes("application/json"))throw new Error(`HTTP ${res.status}`);
       const data=await res.json();
       const text=data.candidates?.[0]?.content?.parts?.[0]?.text;
       if(text)msg=text.trim();
       else console.error("Gemini response error:",data);
     }catch(e){console.error("Gemini API error:",e);}
     try{
-      const token=sessionRef.current?.access_token||null;
+      const token=await getValidToken(sessionRef);
       const finalPhoto=photoEdit?.croppedPhoto||photo||null;
       let photoUrl=null;if(finalPhoto)photoUrl=await uploadPhoto(finalPhoto,token);
       const row={note:note||"📷",category,emoji,photo:photoUrl,lat:lat||null,lng:lng||null,ai_msg:msg,hearts:0,user_id:myUserId||null,user_name:myUserName||null,user_avatar:myAvatar||null,custom_time:customTime||null};
@@ -1001,7 +1012,7 @@ export default function App(){
 
   async function handleEditSave({note,category,emoji,photo,photoEdit,lat,lng,customTime}){
     if(!editTarget)return;
-    const token=sessionRef.current?.access_token||null;
+    const token=await getValidToken(sessionRef);
     let photoUrl=editTarget.photo;
     const finalPhoto=photoEdit?.croppedPhoto||photo;
     if(finalPhoto&&finalPhoto.startsWith("data:")){

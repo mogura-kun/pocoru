@@ -140,7 +140,7 @@ function MoodColorPicker({color,onChange,onClose}){
   }
   const init=color&&color.startsWith('#')?h2hsl(color):[210,80,55];
   const [hue,setHue]=useState(init[0]);
-  const [lit,setLit]=useState(Math.max(15,Math.min(85,init[2])));
+  const [lit,setLit]=useState(Math.max(0,Math.min(100,init[2])));
   const sat=85,sz=220,rad=sz/2-14;
   const ix=sz/2+rad*Math.sin(hue*Math.PI/180);
   const iy=sz/2-rad*Math.cos(hue*Math.PI/180);
@@ -175,8 +175,8 @@ function MoodColorPicker({color,onChange,onClose}){
         <div style={{padding:"0 4px",marginBottom:20}}>
           <div style={{fontSize:10,color:"#aaa",fontWeight:700,letterSpacing:1,marginBottom:8,fontFamily:font}}>明度</div>
           <div style={{position:"relative",height:22,display:"flex",alignItems:"center"}}>
-            <div style={{position:"absolute",width:"100%",height:14,borderRadius:7,background:`linear-gradient(to right,hsl(${hue},${sat}%,10%),hsl(${hue},${sat}%,50%),hsl(${hue},${sat}%,90%))`,boxShadow:"inset 0 1px 3px rgba(0,0,0,0.15)"}}/>
-            <input type="range" min={15} max={85} value={lit} onChange={e=>{const l=Number(e.target.value);setLit(l);onChange(hsl2hex(hue,sat,l));}} style={{position:"relative",width:"100%",margin:0,cursor:"pointer",accentColor:cur,zIndex:1,background:"transparent",height:22}}/>
+            <div style={{position:"absolute",width:"100%",height:14,borderRadius:7,background:`linear-gradient(to right,#000,hsl(${hue},${sat}%,50%),#fff)`,boxShadow:"inset 0 1px 3px rgba(0,0,0,0.15)"}}/>
+            <input type="range" min={0} max={100} value={lit} onChange={e=>{const l=Number(e.target.value);setLit(l);onChange(hsl2hex(hue,sat,l));}} style={{position:"relative",width:"100%",margin:0,cursor:"pointer",accentColor:cur,zIndex:1,background:"transparent",height:22}}/>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 4px"}}>

@@ -992,12 +992,10 @@ export default function App(){
     try{
       const prompt=`「${cl(category)}」に関連した面白い豆知識・雑学、またはクスっとするギャグを1〜2文で日本語で返して。友達に話すような軽いトーンで。${note&&note!=="📷"?`発見メモ:「${note}」。`:""}前置きや締めの言葉は不要。`;
       const res=await fetch("/api/gemini",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
-      if(!res.ok||!res.headers.get("content-type")?.includes("application/json"))throw new Error(`HTTP ${res.status}`);
-      const data=await res.json();
-      const text=data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if(text)msg=text.trim();
-      else console.error("Gemini response error:",data);
-    }catch(e){console.error("Gemini API error:",e);}
+      if(res.status===429||res.status===404){}
+      else if(!res.ok||!res.headers.get("content-type")?.includes("application/json")){}
+      else{const data=await res.json();const text=data.candidates?.[0]?.content?.parts?.[0]?.text;if(text)msg=text.trim();}
+    }catch(e){}
     try{
       const token=await getValidToken(sessionRef);
       const finalPhoto=photoEdit?.croppedPhoto||photo||null;

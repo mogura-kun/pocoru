@@ -106,13 +106,20 @@ function jitter(v){return v+(Math.random()-0.5)*0.00009;}
 function roundTimeStr(date){const d=date instanceof Date?date:new Date(date);if(isNaN(d))return"";const h=d.getHours(),m=d.getMinutes(),rm=m<30?0:30;return`${String(h).padStart(2,"0")}:${String(rm).padStart(2,"0")}ごろ`;}
 function todayStr(){return new Date().toISOString().slice(0,10);}
 
-function Polaroid({photo,emoji,category,rotate=0,small=false}){
+function Polaroid({photo,emoji,category,rotate=0,small=false,note="",userName=""}){
   const w=small?100:155,h=small?82:125;
   const color=emoji&&emoji.startsWith("#")?emoji:getDefaultColor(category);
+  const hasNote=note&&note!=="📷";
   return(
-    <div style={{display:"inline-block",background:"white",padding:small?"6px 6px 22px":"10px 10px 36px",boxShadow:"0 3px 12px rgba(0,0,0,0.10)",borderRadius:2,transform:`rotate(${rotate}deg)`}}>
-      {photo?<img src={photo} alt="" style={{width:w,height:h,objectFit:"cover",display:"block"}}/>
-        :<div style={{width:w,height:h,background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center"}}><MotifIcon motif={category} color={color} size={small?36:56} shadow/></div>}
+    <div style={{display:"inline-block",background:"white",padding:small?"6px 6px 6px":"10px 10px 6px",boxShadow:"0 3px 12px rgba(0,0,0,0.10)",borderRadius:2,transform:`rotate(${rotate}deg)`}}>
+      <div style={{position:"relative",width:w,height:h}}>
+        {photo?<img src={photo} alt="" style={{width:w,height:h,objectFit:"cover",display:"block"}}/>
+          :<div style={{width:w,height:h,background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center"}}><MotifIcon motif={category} color={color} size={small?36:56} shadow/></div>}
+        {userName&&<div style={{position:"absolute",bottom:3,right:4,fontSize:8,color:"rgba(255,255,255,0.95)",textShadow:"0 1px 3px rgba(0,0,0,0.7)",fontFamily:font,maxWidth:w*0.65,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{userName}</div>}
+      </div>
+      <div style={{minHeight:small?18:28,paddingTop:4,width:w}}>
+        {hasNote&&<div style={{fontSize:small?8:9,color:"#888",fontFamily:font,lineHeight:1.4,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{note}</div>}
+      </div>
     </div>
   );
 }
@@ -767,9 +774,9 @@ function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,
                     <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
                   </div>
                   <div style={{transform:`rotate(${rot}deg)`,transformOrigin:"top center",filter:"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))"}}>
-                    <Polaroid photo={d.photo} emoji={d.emoji} category={d.category}/>
+                    <Polaroid photo={d.photo} emoji={d.emoji} category={d.category} note={d.note}/>
                   </div>
-                  {d.note&&d.note!=="📷"&&<div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}><StickyNote text={d.note} colorKey={stickyColors[i%stickyColors.length]}/></div>}
+                  {d.ai_msg&&<div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}><StickyNote text={d.ai_msg} colorKey={stickyColors[i%stickyColors.length]}/></div>}
                 </div>
               );
             })}
@@ -808,10 +815,9 @@ function CorkBoard({items,onItemClick,showUser=false}){
               <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
             </div>
             <div style={{transform:`rotate(${rot}deg)`,transformOrigin:"top center",filter:"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))"}}>
-              <Polaroid photo={d.photo} emoji={d.emoji} category={d.category}/>
+              <Polaroid photo={d.photo} emoji={d.emoji} category={d.category} note={d.note} userName={showUser?d.user_name:""}/>
             </div>
-            {d.note&&d.note!=="📷"&&<div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}><StickyNote text={d.note} colorKey={stickyColors[i%stickyColors.length]}/></div>}
-            {showUser&&d.user_name&&<div style={{fontSize:9,color:"rgba(255,255,255,0.8)",marginTop:4,fontFamily:font,textAlign:"center",opacity:0.9,maxWidth:60,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.user_name}</div>}
+            {d.ai_msg&&<div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}><StickyNote text={d.ai_msg} colorKey={stickyColors[i%stickyColors.length]}/></div>}
           </div>
         );
       })}

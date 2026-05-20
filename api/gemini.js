@@ -4,6 +4,7 @@ module.exports = async function handler(req, res) {
   }
   const { prompt } = req.body;
   if (!prompt) return res.status(400).json({ error: 'prompt required' });
+  if (!process.env.GEMINI_KEY) return res.status(500).json({ error: 'GEMINI_KEY not set' });
   try {
     const r = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_KEY}`,
@@ -13,7 +14,9 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
       }
     );
-    const data = await r.json();
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { error: 'non-json', raw: text.slice(0, 300) }; }
     res.status(r.status).json(data);
   } catch (e) {
     res.status(500).json({ error: e.message });

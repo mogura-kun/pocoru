@@ -353,7 +353,7 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
           <p style={{margin:0,fontSize:13,lineHeight:1.7,color:"#3a3028",fontStyle:"italic",fontFamily:font}}>{item.ai_msg}</p>
         </div>
         <div style={{textAlign:"right",marginTop:4}}>
-          <button onClick={()=>!already&&onHeart(item.id)} style={{border:"none",background:"none",cursor:already?"default":"pointer",fontSize:12,color:already?"#d4848a":"#ccc",fontFamily:font,padding:"4px 8px",letterSpacing:1,transition:"color 0.2s"}}>
+          <button onClick={()=>onHeart(item.id)} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:already?"#d4848a":"#ccc",fontFamily:font,padding:"4px 8px",letterSpacing:1,transition:"color 0.2s"}}>
             ♥ {item.hearts||0}
           </button>
         </div>
@@ -938,11 +938,14 @@ export default function App(){
   function toggleCat(v){setVisibleCats(prev=>prev.includes(v)?prev.length>1?prev.filter(x=>x!==v):prev:[...prev,v]);}
 
   async function handleHeart(id){
-    const updated=[...myHearts,id];setMyHearts(updated);lsSet("myHearts",updated);
-    const upd=prev=>prev.map(d=>d.id===id?{...d,hearts:(d.hearts||0)+1}:d);
+    const already=myHearts.includes(id);
+    const updated=already?myHearts.filter(x=>x!==id):[...myHearts,id];
+    setMyHearts(updated);lsSet("myHearts",updated);
+    const delta=already?-1:1;
+    const upd=prev=>prev.map(d=>d.id===id?{...d,hearts:Math.max(0,(d.hearts||0)+delta)}:d);
     setDiscoveries(upd);setFollowingPosts(upd);
-    if(selected?.id===id)setSelected(s=>({...s,hearts:(s.hearts||0)+1}));
-    try{const cur=[...discoveries,...followingPosts].find(d=>d.id===id);await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({hearts:(cur?.hearts||0)+1})});}catch{}
+    if(selected?.id===id)setSelected(s=>({...s,hearts:Math.max(0,(s.hearts||0)+delta)}));
+    try{const cur=[...discoveries,...followingPosts,...myDiscoveries].find(d=>d.id===id);await supa(`discoveries?id=eq.${id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({hearts:Math.max(0,(cur?.hearts||0)+delta)})});}catch{}
   }
 
   async function handleUpdate(id,updates){

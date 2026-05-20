@@ -755,8 +755,8 @@ function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,
           <div style={{fontSize:11,color:"#bbb",fontWeight:700,letterSpacing:2,fontFamily:font}}>発見 {userDisc.length}件</div>
           {isMe&&<div style={{fontSize:10,background:"#e5ede0",color:"#8aaa7a",padding:"2px 8px",borderRadius:8,fontWeight:700,fontFamily:font}}>永久保存</div>}
         </div>
-        <div style={{background:"#c8a882",padding:"12px 8px 48px",minHeight:200,marginLeft:-20,marginRight:-20}}>
-          {userDisc.length===0&&<div style={{textAlign:"center",padding:"40px 0",color:"rgba(255,255,255,0.7)"}}><div style={{fontSize:32,marginBottom:8}}>🌱</div><div style={{fontSize:13,fontFamily:font}}>まだ投稿がありません</div></div>}
+        <div style={{background:"#f4ddde",padding:"12px 8px 48px",minHeight:200,marginLeft:-20,marginRight:-20}}>
+          {userDisc.length===0&&<div style={{textAlign:"center",padding:"40px 0",color:"rgba(100,80,80,0.6)"}}><div style={{fontSize:32,marginBottom:8}}>🌱</div><div style={{fontSize:13,fontFamily:font}}>まだ投稿がありません</div></div>}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"24px 12px"}}>
             {userDisc.map((d,i)=>{
               const rot=[2,-3,1,-2,3,-1][i%6],sRot=[-2,3,-1,2,-3,1][i%6];
@@ -1072,7 +1072,7 @@ export default function App(){
           </div>
           <div style={{flex:1,overflowY:"auto",paddingBottom:80,minHeight:0}}>
             {tab===1&&<div style={{background:"#c8a882",minHeight:"100%",padding:"10px 8px 80px"}}><CorkBoard items={timelineItems} onItemClick={setSelected} showUser={true}/></div>}
-            {tab===2&&<div style={{background:"#c8a882",minHeight:"100%",padding:"10px 8px 80px"}}><CorkBoard items={memoryItems} onItemClick={setSelected} showUser={false}/></div>}
+            {tab===2&&<div style={{background:"#f4ddde",minHeight:"100%",padding:"10px 8px 80px"}}><CorkBoard items={memoryItems} onItemClick={setSelected} showUser={false}/></div>}
           </div>
           {!showCapture&&!showAI&&!selected&&!showWeatherPanel&&!showProfile&&!editTarget&&(
             <button onClick={()=>globalCameraRef.current?.click()} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px) + 22px)",right:18,width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#94c286,#72966a)",color:"white",fontSize:24,fontWeight:700,boxShadow:"0 4px 16px rgba(138,170,122,0.45)",zIndex:50,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>

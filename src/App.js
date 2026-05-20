@@ -65,6 +65,19 @@ function useLeaflet(cb){
   },[]);
 }
 
+const FALLBACKS={
+  flower:["植物って、雨の後に一番きれいに輝くんだそうです🌱","花が咲く瞬間、一秒一秒ちゃんと違う顔をしているんだって！","花の香りは虫への手紙。今日は特別な手紙が届いたのかも🌸"],
+  bird:["鳥たちは地球の磁場を感じて方向を知るんだとか。羨ましい！","鳥のさえずりには方言があるらしい。近所の鳥と遠くの鳥、話が通じるのかな🐦","鳥は恐竜の子孫。そう思うと少し見え方が変わりますね"],
+  fish:["水の中の世界も、きっと賑やかなんだろうな🐟","魚は寝るとき目を開けたまま。ずっと見張ってるみたい👀","川や海を泳ぐ姿、何万年も変わってないんだろうな"],
+  cloud:["同じ形の雲は二度と現れない。今この瞬間だけの空模様✨","雲1つの重さは約500トンとも。空って重い！","雲を見上げる時間、なんか贅沢ですよね☁️"],
+  plane:["空の青さは光の散乱で生まれる。つまり空自体に色はない、らしい🌀","飛行機雲は湿度が高いと長く残る。天気予報になるかも？","空を見上げる癖、いいと思います✈️"],
+  music:["音楽を聴くと脳内でドーパミンが出るらしい。最高の薬かも！","好きな曲で鳥肌が立つ人、全体の65%だそう。感受性の証拠✨","メロディは記憶と直結している。この曲、いつまでも覚えてそう🎵"],
+  sparkle:["アイデアはリラックスしているときに一番降ってくるらしい💡","ひらめきの瞬間、脳のガンマ波が急上昇するんだって！","小さな気づきが、大きな発見につながることがある🌟"],
+  bread:["世界で一番古いパンは約1万4千年前のもの。人類とパンの歴史は深い🍞","食べることで幸せを感じるのは、本能レベルで正しいことらしい！","おいしいものの前では、みんな正直になれる気がする😊"],
+  _:["こういう小さな気づき、積み重なると人生豊かになりそう✨","日常の中にある宝物、ちゃんと見つけましたね🌱","今日も街があなたに話しかけてきましたね☀️","見過ごしそうなものを、ちゃんとキャッチしましたね👀","なんかいいですね、こういうの🌿"],
+};
+function getFallback(category){const arr=FALLBACKS[category]||FALLBACKS._;const h=(category||"").split("").reduce((a,c)=>a+c.charCodeAt(0),0)+new Date().getHours();return arr[Math.abs(h)%arr.length];}
+
 const CATEGORIES=[
   {value:"flower", label:"植物",   defaultColor:"#d4848a"},
   {value:"bird",   label:"いきもの", defaultColor:"#6aaac6"},
@@ -988,15 +1001,12 @@ export default function App(){
     const now=Date.now();
     if(now-lastPostRef.current<10000){alert(`続けて投稿するには${Math.ceil((10000-(now-lastPostRef.current))/1000)}秒待ってください`);return;}
     lastPostRef.current=now;
-    let msg="素敵な発見！今日が少し特別な日になりましたね。";
+    let msg=getFallback(category);
     try{
       const prompt=`「${cl(category)}」に関連した面白い豆知識・雑学、またはクスっとするギャグを1〜2文で日本語で返して。友達に話すような軽いトーンで。${note&&note!=="📷"?`発見メモ:「${note}」。`:""}前置きや締めの言葉は不要。`;
       const res=await fetch("/api/gemini",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
-      const rawText=await res.text();
-      console.log("[Gemini] status:",res.status,"body:",rawText.slice(0,200));
-      if(res.status===404){}
-      else if(res.ok){try{const data=JSON.parse(rawText);const text=data.candidates?.[0]?.content?.parts?.[0]?.text;if(text)msg=text.trim();}catch{}}
-    }catch(e){console.log("[Gemini] fetch error:",e.message);}
+      if(res.ok){const rawText=await res.text();try{const data=JSON.parse(rawText);const text=data.candidates?.[0]?.content?.parts?.[0]?.text;if(text)msg=text.trim();}catch{}}
+    }catch{}
     try{
       const token=await getValidToken(sessionRef);
       const finalPhoto=photoEdit?.croppedPhoto||photo||null;

@@ -421,7 +421,7 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
     if(!deepMsg&&!loadingDeep){
       setLoadingDeep(true);
       try{
-        const prompt=`${item.ai_msg}について、${cl(item.category)}に関する面白い豆知識をもう少し詳しく3〜4文で。友達トーンで。`;
+        const prompt=`「${item.ai_msg}」という内容についてもっと詳しく教えてください。同じ${cl(item.category)}に関する話題で、この内容の続きや背景・面白いエピソードを3〜4文で深掘りしてください。友達に話すような軽いトーンで。前置き不要。`;
         const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
         if(!response.ok)throw new Error("API error");
         const data=await response.json();

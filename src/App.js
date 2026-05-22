@@ -670,6 +670,7 @@ function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,
   const [editName,setEditName]=useState(myUserName||"");
   const [bio,setBio]=useState("");
   const [savingName,setSavingName]=useState(false);
+  const [editMode,setEditMode]=useState(false);
   const [avatarUrl,setAvatarUrl]=useState(isMe?myAvatar:null);
   const avatarInputRef=useRef(null);
   const [followers,setFollowers]=useState([]);
@@ -768,7 +769,7 @@ function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,
                 <button onClick={()=>loadFollowUsers('following')} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:"#3a3028",fontFamily:font,padding:0}}>フォロー <span style={{fontWeight:700,color:"#83b195"}}>{following.length}</span></button>
                 <button onClick={()=>loadFollowUsers('followers')} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:"#3a3028",fontFamily:font,padding:0}}>フォロワー <span style={{fontWeight:700,color:"#83b195"}}>{followers.length}</span></button>
               </div>
-              {bio&&!isMe&&<p style={{margin:"6px 0 0",fontSize:12,color:"#888",fontFamily:font,lineHeight:1.5}}>{bio}</p>}
+              {bio&&<p style={{margin:"6px 0 0",fontSize:12,color:"#888",fontFamily:font,lineHeight:1.5}}>{bio}</p>}
             </div>
           </div>
           <div style={{display:"flex",gap:7,alignItems:"center"}}>
@@ -776,12 +777,18 @@ function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,
             <button onClick={onClose} style={{width:28,height:28,borderRadius:"50%",border:"none",background:"#e8e0d8",color:"#aaa",fontSize:13,cursor:"pointer"}}>×</button>
           </div>
         </div>
-        {isMe&&(
+        {isMe&&!editMode&&(
+          <button onClick={()=>{setEditName(myUserName||"");setEditMode(true);}} style={{width:"100%",padding:"8px 0",borderRadius:9,border:"1.5px solid #e8e0d8",background:"white",color:"#83b195",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font,marginBottom:13}}>プロフィールを編集</button>
+        )}
+        {isMe&&editMode&&(
           <div style={{background:"white",borderRadius:13,padding:12,marginBottom:13,boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
             <div style={{fontSize:11,fontWeight:700,color:"#83b195",marginBottom:7,fontFamily:font}}>プロフィール編集</div>
             <input value={editName} onChange={e=>setEditName(e.target.value)} placeholder="名前" style={{width:"100%",padding:"8px 11px",borderRadius:9,border:"1px solid #e8e0d8",fontSize:13,fontFamily:font,outline:"none",boxSizing:"border-box",marginBottom:7}}/>
             <textarea value={bio} onChange={e=>setBio(e.target.value)} placeholder="自己紹介（省略可）" rows={2} style={{width:"100%",padding:"8px 11px",borderRadius:9,border:"1px solid #e8e0d8",fontSize:12,fontFamily:font,outline:"none",boxSizing:"border-box",resize:"none",lineHeight:1.6,marginBottom:7}}/>
-            <button onClick={saveName} disabled={savingName} style={{width:"100%",padding:"8px 0",borderRadius:9,border:"none",background:"#83b195",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font}}>{savingName?"保存中…":"保存"}</button>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>setEditMode(false)} style={{flex:1,padding:"8px 0",borderRadius:9,border:"1.5px solid #e8e0d8",background:"white",color:"#aaa",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font}}>キャンセル</button>
+              <button onClick={async()=>{await saveName();setEditMode(false);}} disabled={savingName} style={{flex:2,padding:"8px 0",borderRadius:9,border:"none",background:"#83b195",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font}}>{savingName?"保存中…":"保存"}</button>
+            </div>
           </div>
         )}
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,padding:"0 2px"}}>

@@ -1180,14 +1180,14 @@ export default function App(){
     let msg=getFallback(category);
     try{
       const prompt=`「${cl(category)}」に関連した面白い豆知識・雑学、またはクスっとするギャグを1〜2文で日本語で返して。友達に話すような軽いトーンで。${note&&note!=="📷"?`発見メモ:「${note}」。`:""}前置きや締めの言葉は不要。`;
-      const response=await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`,
-        {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({contents:[{parts:[{text:prompt}]}]}),
-        }
-      );
+      const geminiUrl=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`;
+      const geminiBody=JSON.stringify({contents:[{parts:[{text:prompt}]}]});
+      let response;
+      for(let attempt=0;attempt<2;attempt++){
+        if(attempt>0)await new Promise(r=>setTimeout(r,3000));
+        response=await fetch(geminiUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:geminiBody});
+        if(response.status!==429)break;
+      }
       if(!response.ok)throw new Error(`HTTP error! status: ${response.status}`);
       const data=await response.json();
       const aiText=data.candidates?.[0]?.content?.parts?.[0]?.text;

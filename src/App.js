@@ -345,24 +345,27 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
   const wEmoji=WEATHERS.find(w=>w.value===item.weather)?.emoji;
   const color=getColor(item);
   const [flipped,setFlipped]=useState(false);
-  const [deepText,setDeepText]=useState(null);
-  const [deepLoading,setDeepLoading]=useState(false);
+  const [deepMsg,setDeepMsg]=useState("");
+  const [loadingDeep,setLoadingDeep]=useState(false);
+  const stickyKeys=["yellow","pink","blue","green","orange"];
+  const stickyKey=stickyKeys[Math.abs((item.id||"").charCodeAt?.(0)||0)%5];
+  const stickyBg={yellow:"#fef08a",pink:"#fda4af",blue:"#bae6fd",green:"#bbf7d0",orange:"#fed7aa"}[stickyKey]||"#fef08a";
 
   async function handleFlip(){
     setFlipped(true);
-    if(!deepText&&!deepLoading){
-      setDeepLoading(true);
+    if(!deepMsg&&!loadingDeep){
+      setLoadingDeep(true);
       try{
-        const prompt=`${item.ai_msg}という内容について、散歩中に見つけた${cl(item.category)}に関するもう少し詳しい豆知識や面白い話を3〜4文で教えてください。友達トーンで。`;
+        const prompt=`${item.ai_msg}について、${cl(item.category)}に関する面白い豆知識をもう少し詳しく3〜4文で。友達トーンで。`;
         const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
         if(!response.ok)throw new Error("API error");
         const data=await response.json();
         const text=data.candidates?.[0]?.content?.parts?.[0]?.text;
-        setDeepText(text||getFallback(item.category));
+        setDeepMsg(text||getFallback(item.category));
       }catch(e){
-        setDeepText(getFallback(item.category));
+        setDeepMsg(getFallback(item.category));
       }finally{
-        setDeepLoading(false);
+        setLoadingDeep(false);
       }
     }
   }
@@ -371,15 +374,16 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(58,48,40,0.5)",zIndex:350,display:"flex",alignItems:"flex-end"}}>
       <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#f4f6f3",borderRadius:"28px 28px 0 0",padding:"22px 20px 48px",boxShadow:"0 -6px 30px rgba(0,0,0,0.10)",animation:"slideUp 0.3s ease",maxHeight:"90dvh",overflowY:"auto"}}>
         <div style={{width:40,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 18px"}}/>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+        {/* ヘッダー */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:44,height:44,borderRadius:13,background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center"}}><MotifIcon motif={item.category} color={color} size={24} shadow/></div>
+            <div style={{width:40,height:40,borderRadius:12,background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center"}}><MotifIcon motif={item.category} color={color} size={22} shadow/></div>
             <div>
               <div style={{fontSize:12,fontWeight:700,color:color,fontFamily:font}}>{item.user_name||cl(item.category)}</div>
               <div style={{fontSize:11,color:"#bbb",fontFamily:font}}>{timeStr}{wEmoji&&<span style={{marginLeft:5}}>{wEmoji}</span>}</div>
               {item.user_name&&!isOwn&&(
                 <button onClick={()=>{onClose();onViewUser(item.user_id,item.user_name);}} style={{border:"none",background:"none",cursor:"pointer",fontSize:11,color:"#83b195",fontFamily:font,padding:0,marginTop:2,display:"flex",alignItems:"center",gap:4}}>
-                  {item.user_avatar?<img src={item.user_avatar} alt="" style={{width:16,height:16,borderRadius:"50%",objectFit:"cover"}}/>:<span>👤</span>}
+                  {item.user_avatar?<img src={item.user_avatar} alt="" style={{width:14,height:14,borderRadius:"50%",objectFit:"cover"}}/>:<span>👤</span>}
                   {item.user_name}
                 </button>
               )}
@@ -391,52 +395,60 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
             <button onClick={onClose} style={{width:28,height:28,borderRadius:"50%",border:"none",background:"#e8e0d8",color:"#aaa",fontSize:14,cursor:"pointer"}}>×</button>
           </div>
         </div>
-        {/* 写真 */}
-        <div style={{marginBottom:12}}>
-          {item.photo
-            ?<div style={{background:"white",padding:"8px 8px 32px",boxShadow:"0 3px 14px rgba(0,0,0,0.10)",borderRadius:2,transform:"rotate(-1deg)"}}>
-                <img src={item.photo} alt="" style={{width:"100%",height:240,objectFit:"cover",display:"block",borderRadius:1}}/>
-              </div>
-            :<div style={{display:"flex",justifyContent:"center",padding:"16px 0"}}>
-                <div style={{width:100,height:100,borderRadius:"50%",background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <MotifIcon motif={item.category} color={color} size={56} shadow/>
-                </div>
-              </div>
-          }
+        {/* ポラロイド */}
+        <div style={{display:"flex",justifyContent:"center",marginBottom:16}}>
+          <Polaroid photo={item.photo} emoji={item.emoji} category={item.category} note={item.note} rotate={itemRot(item.id)}/>
         </div>
-        {/* 投稿コメント */}
-        {item.note&&item.note!=="📷"&&(
-          <div style={{background:"white",borderRadius:16,padding:14,marginBottom:12,boxShadow:"0 1px 4px rgba(0,0,0,0.06)"}}>
-            <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>💬 ひとこと</div>
-            <p style={{margin:0,fontSize:14,lineHeight:1.7,color:"#3a3028",fontFamily:font}}>{item.note}</p>
-          </div>
-        )}
-        {/* AIコメント（フリップカード） */}
+        {/* 付箋（めくるアニメーション） */}
         {item.ai_msg&&(
-          <div style={{perspective:"600px",marginBottom:16}}>
-            <div style={{position:"relative",transformStyle:"preserve-3d",transition:"transform 0.6s",transform:flipped?"rotateY(180deg)":"rotateY(0deg)"}}>
+          <div style={{perspective:"400px",marginBottom:16}}>
+            <div style={{
+              position:"relative",
+              transformStyle:"preserve-3d",
+              transition:"transform 0.5s ease",
+              transform:flipped?"rotateX(-180deg)":"rotateX(0deg)",
+              transformOrigin:"top center",
+            }}>
               {/* 表面 */}
-              <div style={{backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",background:getBg(color),borderRadius:16,padding:14,borderLeft:`4px solid ${color}`}}>
-                <div style={{fontSize:10,color:color,fontWeight:700,letterSpacing:1,marginBottom:4,fontFamily:font}}>✦ AIひとこと</div>
-                <p style={{margin:0,fontSize:13,lineHeight:1.7,color:"#3a3028",fontFamily:font}}>{item.ai_msg}</p>
-                <div style={{textAlign:"right",marginTop:8}}>
-                  <button onClick={handleFlip} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:color,fontFamily:font,fontWeight:700,padding:0}}>もっと詳しく ›</button>
+              <div style={{
+                backfaceVisibility:"hidden",
+                WebkitBackfaceVisibility:"hidden",
+                background:stickyBg,
+                padding:"16px 14px 12px",
+                boxShadow:"2px 3px 6px rgba(0,0,0,0.09)",
+                fontFamily:font,fontSize:13,lineHeight:1.7,color:"#3a3028",borderRadius:2,
+                position:"relative",
+              }}>
+                <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:22,height:5,background:"rgba(0,0,0,0.08)",borderRadius:"0 0 4px 4px"}}/>
+                <p style={{margin:"0 0 10px 0"}}>{item.ai_msg}</p>
+                <div style={{textAlign:"right"}}>
+                  <button onClick={handleFlip} style={{border:"none",background:"rgba(0,0,0,0.09)",borderRadius:6,padding:"3px 10px",fontSize:11,cursor:"pointer",fontFamily:font,color:"#3a3028",fontWeight:700}}>めくる ›</button>
                 </div>
               </div>
               {/* 裏面 */}
-              <div style={{backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",transform:"rotateY(180deg)",background:getBg(color),borderRadius:16,padding:14,borderLeft:`4px solid ${color}`,position:"absolute",top:0,left:0,right:0}}>
-                <div style={{fontSize:10,color:color,fontWeight:700,letterSpacing:1,marginBottom:4,fontFamily:font}}>✦ もっと詳しく</div>
-                {deepLoading
-                  ?<p style={{margin:0,fontSize:13,color:"#aaa",fontFamily:font}}>読み込み中…</p>
-                  :<p style={{margin:0,fontSize:13,lineHeight:1.7,color:"#3a3028",fontFamily:font}}>{deepText}</p>
+              <div style={{
+                transform:"rotateX(180deg)",
+                backfaceVisibility:"hidden",
+                WebkitBackfaceVisibility:"hidden",
+                background:stickyBg,
+                padding:"16px 14px 12px",
+                boxShadow:"2px 3px 6px rgba(0,0,0,0.09)",
+                fontFamily:font,fontSize:13,lineHeight:1.7,color:"#3a3028",borderRadius:2,
+                position:"absolute",top:0,left:0,right:0,
+              }}>
+                <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:22,height:5,background:"rgba(0,0,0,0.08)",borderRadius:"0 0 4px 4px"}}/>
+                {loadingDeep
+                  ?<p style={{margin:"0 0 10px 0",color:"#888"}}>読み込み中…</p>
+                  :<p style={{margin:"0 0 10px 0"}}>{deepMsg||"　"}</p>
                 }
-                <div style={{textAlign:"left",marginTop:8}}>
-                  <button onClick={()=>setFlipped(false)} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:color,fontFamily:font,fontWeight:700,padding:0}}>‹ 戻る</button>
+                <div style={{textAlign:"right"}}>
+                  <button onClick={()=>setFlipped(false)} style={{border:"none",background:"rgba(0,0,0,0.09)",borderRadius:6,padding:"3px 10px",fontSize:11,cursor:"pointer",fontFamily:font,color:"#3a3028",fontWeight:700}}>‹ 戻る</button>
                 </div>
               </div>
             </div>
           </div>
         )}
+        {/* いいね */}
         <div style={{textAlign:"right",marginTop:4}}>
           <button onClick={()=>onHeart(item.id)} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:already?"#d4848a":"#ccc",fontFamily:font,padding:"4px 8px",letterSpacing:1,transition:"color 0.2s"}}>
             ♥ {item.hearts||0}

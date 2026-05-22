@@ -306,69 +306,97 @@ function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick
   );
 }
 
-function UserSearchModal({onClose,onViewUser}){
+function UserSearchModal({onClose,onViewUser,myUserName,myUserCode}){
+  const [showMyId,setShowMyId]=useState(false);
+  const [copied,setCopied]=useState(false);
   const [query,setQuery]=useState("");
-  const [results,setResults]=useState([]);
-  const [loading,setLoading]=useState(false);
-  const [postCounts,setPostCounts]=useState({});
-  const timerRef=useRef(null);
+  const [result,setResult]=useState(null);
+  const [searching,setSearching]=useState(false);
+  const [notFound,setNotFound]=useState(false);
+  const [postCount,setPostCount]=useState(0);
 
-  useEffect(()=>{
-    if(!query.trim()){setResults([]);return;}
-    clearTimeout(timerRef.current);
-    timerRef.current=setTimeout(async()=>{
-      setLoading(true);
-      try{
-        const data=await supa(`users?name=ilike.*${encodeURIComponent(query.trim())}*&select=id,name,bio,avatar_url&limit=20`);
-        const users=data||[];
-        setResults(users);
-        if(users.length>0){
-          const ids=users.map(u=>u.id).join(",");
-          const posts=await supa(`discoveries?user_id=in.(${ids})&select=user_id`);
-          const counts={};
-          (posts||[]).forEach(p=>{counts[p.user_id]=(counts[p.user_id]||0)+1;});
-          setPostCounts(counts);
-        }
-      }catch{setResults([]);}
-      setLoading(false);
-    },300);
-    return()=>clearTimeout(timerRef.current);
-  },[query]);
+  const myCode=myUserCode||lsGet("userCode",null);
+  const myFullId=myUserName&&myCode?`${myUserName}#${myCode}`:null;
+
+  function copyId(){
+    if(!myFullId)return;
+    const doFallback=()=>{try{const el=document.createElement("textarea");el.value=myFullId;document.body.appendChild(el);el.select();document.execCommand("copy");document.body.removeChild(el);setCopied(true);setTimeout(()=>setCopied(false),2000);}catch{}};
+    if(navigator.clipboard?.writeText){navigator.clipboard.writeText(myFullId).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);}).catch(doFallback);}
+    else doFallback();
+  }
+
+  async function handleSearch(){
+    const t=query.trim();
+    const hi=t.lastIndexOf("#");
+    if(hi===-1||!t.slice(0,hi).trim()||!t.slice(hi+1).trim())return;
+    const name=t.slice(0,hi).trim(),code=t.slice(hi+1).trim();
+    setSearching(true);setResult(null);setNotFound(false);
+    try{
+      const data=await supa(`users?name=eq.${encodeURIComponent(name)}&user_code=eq.${code}&select=id,name,bio,avatar_url`);
+      if(data&&data.length>0){
+        const u=data[0];
+        const posts=await supa(`discoveries?user_id=eq.${u.id}&select=id`);
+        setPostCount((posts||[]).length);
+        setResult(u);
+      }else setNotFound(true);
+    }catch{setNotFound(true);}
+    setSearching(false);
+  }
 
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(58,48,40,0.5)",zIndex:210,display:"flex",alignItems:"flex-end"}}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#f4f6f3",borderRadius:"28px 28px 0 0",padding:"20px 20px 0",boxShadow:"0 -6px 30px rgba(0,0,0,0.10)",animation:"slideUp 0.3s ease",maxHeight:"80dvh",display:"flex",flexDirection:"column"}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#f4f6f3",borderRadius:"28px 28px 0 0",padding:"20px 20px 0",boxShadow:"0 -6px 30px rgba(0,0,0,0.10)",animation:"slideUp 0.3s ease",maxHeight:"85dvh",display:"flex",flexDirection:"column"}}>
         <div style={{width:40,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 16px"}}/>
-        <div style={{fontSize:15,fontWeight:800,fontFamily:font,marginBottom:12}}>🔍 ユーザーを探す</div>
-        <div style={{position:"relative",marginBottom:12,flexShrink:0}}>
-          <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ユーザーネームで検索…" autoFocus
-            style={{width:"100%",padding:"10px 14px 10px 38px",borderRadius:12,border:"1.5px solid #e8e0d8",fontSize:14,fontFamily:font,outline:"none",background:"white",boxSizing:"border-box"}}/>
-          <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15,pointerEvents:"none"}}>🔍</span>
+        <div style={{fontSize:15,fontWeight:800,fontFamily:font,marginBottom:14}}>🔍 ユーザーを探す</div>
+        {/* 自分のIDエリア */}
+        <div style={{background:"#e8f4ec",borderRadius:12,padding:"12px 14px",marginBottom:14,flexShrink:0}}>
+          <div style={{fontSize:11,color:"#83b195",fontWeight:700,marginBottom:6,fontFamily:font}}>自分のID</div>
+          {!showMyId
+            ?<button onClick={()=>setShowMyId(true)} style={{border:"none",background:"rgba(131,177,149,0.18)",borderRadius:8,padding:"6px 12px",fontSize:12,color:"#83b195",fontWeight:700,cursor:"pointer",fontFamily:font}}>自分のIDを見る 👁</button>
+            :<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+              <div style={{fontSize:17,fontWeight:800,color:"#3a3028",fontFamily:font,letterSpacing:0.5}}>{myFullId||"取得中…"}</div>
+              <div style={{display:"flex",gap:6,flexShrink:0}}>
+                <button onClick={copyId} style={{border:"none",background:"rgba(131,177,149,0.2)",borderRadius:8,padding:"4px 9px",fontSize:11,color:"#83b195",fontWeight:700,cursor:"pointer",fontFamily:font}}>{copied?"済 ✓":"📋 コピー"}</button>
+                <button onClick={()=>setShowMyId(false)} style={{border:"none",background:"rgba(0,0,0,0.07)",borderRadius:8,padding:"4px 9px",fontSize:11,color:"#888",cursor:"pointer",fontFamily:font}}>隠す</button>
+              </div>
+            </div>
+          }
+        </div>
+        <div style={{height:1,background:"#e8e0d8",marginBottom:14,flexShrink:0}}/>
+        {/* 検索エリア */}
+        <div style={{fontSize:12,color:"#aaa",marginBottom:8,fontFamily:font,flexShrink:0}}>友達のID（ユーザーネーム#番号）を入力</div>
+        <div style={{display:"flex",gap:8,marginBottom:12,flexShrink:0}}>
+          <input value={query} onChange={e=>{setQuery(e.target.value);setResult(null);setNotFound(false);}}
+            onKeyDown={e=>e.key==="Enter"&&handleSearch()}
+            placeholder="例：もぐらくん#4829"
+            style={{flex:1,padding:"10px 12px",borderRadius:12,border:"1.5px solid #e8e0d8",fontSize:13,fontFamily:font,outline:"none",background:"white",boxSizing:"border-box"}}/>
+          <button onClick={handleSearch} style={{padding:"10px 16px",borderRadius:12,border:"none",background:"#83b195",color:"white",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:font,flexShrink:0}}>検索</button>
         </div>
         <div style={{overflowY:"auto",flex:1,paddingBottom:"max(24px,env(safe-area-inset-bottom))"}}>
-          {loading&&<div style={{textAlign:"center",padding:"20px 0",color:"#bbb",fontFamily:font,fontSize:13}}>検索中…</div>}
-          {!loading&&query.trim()&&results.length===0&&<div style={{textAlign:"center",padding:"30px 0",color:"#ccc",fontFamily:font,fontSize:13}}>見つかりませんでした</div>}
-          {results.map(u=>(
-            <button key={u.id} onClick={()=>{onClose();onViewUser(u.id,u.name);}}
-              style={{width:"100%",padding:"12px 0",border:"none",borderBottom:"1px solid #f0ebe4",background:"transparent",textAlign:"left",cursor:"pointer",display:"flex",alignItems:"center",gap:12,fontFamily:font}}>
-              <div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",background:"#e5ede0",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                {u.avatar_url?<img src={u.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:20}}>👤</span>}
+          {searching&&<div style={{textAlign:"center",padding:"24px 0",color:"#bbb",fontFamily:font,fontSize:13}}>検索中…</div>}
+          {notFound&&<div style={{textAlign:"center",padding:"30px 0",color:"#ccc",fontFamily:font,fontSize:13}}>見つかりませんでした</div>}
+          {!searching&&!notFound&&!result&&<div style={{textAlign:"center",padding:"24px 0",color:"#ddd",fontFamily:font,fontSize:12}}>名前#番号の形式で入力してください</div>}
+          {result&&(
+            <button onClick={()=>{onClose();onViewUser(result.id,result.name);}}
+              style={{width:"100%",padding:"14px",border:"none",background:"white",borderRadius:14,textAlign:"left",cursor:"pointer",display:"flex",alignItems:"center",gap:12,fontFamily:font,boxShadow:"0 2px 8px rgba(0,0,0,0.07)",boxSizing:"border-box"}}>
+              <div style={{width:48,height:48,borderRadius:"50%",overflow:"hidden",background:"#e5ede0",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                {result.avatar_url?<img src={result.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:22}}>👤</span>}
               </div>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:13,fontWeight:700,color:"#3a3028"}}>{u.name}</div>
-                {u.bio&&<div style={{fontSize:11,color:"#aaa",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.bio}</div>}
-                <div style={{fontSize:10,color:"#83b195",marginTop:2}}>発見 {postCounts[u.id]||0}件</div>
+                <div style={{fontSize:14,fontWeight:700,color:"#3a3028"}}>{result.name}</div>
+                {result.bio&&<div style={{fontSize:11,color:"#aaa",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{result.bio}</div>}
+                <div style={{fontSize:10,color:"#83b195",marginTop:3}}>発見 {postCount}件</div>
               </div>
-              <span style={{fontSize:12,color:"#ccc",flexShrink:0}}>›</span>
+              <span style={{fontSize:13,color:"#ccc",flexShrink:0}}>›</span>
             </button>
-          ))}
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater,onViewUser,userName,avatarUrl}){
+function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater,onViewUser,userName,avatarUrl,myUserCode}){
   const [showUserSearch,setShowUserSearch]=useState(false);
   return(
     <>
@@ -398,7 +426,7 @@ function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater
           <button onClick={onClose} style={{width:"100%",padding:"11px 0",borderRadius:13,border:"none",background:"#83b195",color:"white",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:font}}>閉じる</button>
         </div>
       </div>
-      {showUserSearch&&<UserSearchModal onClose={()=>setShowUserSearch(false)} onViewUser={(id,name)=>{setShowUserSearch(false);onClose();onViewUser(id,name);}}/>}
+      {showUserSearch&&<UserSearchModal onClose={()=>setShowUserSearch(false)} onViewUser={(id,name)=>{setShowUserSearch(false);onClose();onViewUser(id,name);}} myUserName={userName} myUserCode={myUserCode}/>}
     </>
   );
 }
@@ -1001,6 +1029,7 @@ export default function App(){
   const [myUserId,setMyUserId]=useState(null);
   const [myUserName,setMyUserName]=useState("");
   const [myAvatar,setMyAvatar]=useState(()=>lsGet("myAvatar",null));
+  const [myUserCode,setMyUserCode]=useState(()=>lsGet("userCode",null));
   const [authReady,setAuthReady]=useState(false);
   const [menuOpen,setMenuOpen]=useState(false);
   const [showAI,setShowAI]=useState(false);
@@ -1036,8 +1065,12 @@ export default function App(){
             setMyUserId(user.id);setMyUserName(name);lsSet("userName",name);
             await supa(`users?id=eq.${user.id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({name})},at).catch(()=>{});
             await supa("users",{method:"POST",prefer:"return=minimal",body:JSON.stringify({id:user.id,name})},at).catch(()=>{});
-            const udata=await supa(`users?id=eq.${user.id}&select=avatar_url`,{},at).catch(()=>null);
-            if(udata&&udata[0]?.avatar_url){setMyAvatar(udata[0].avatar_url);lsSet("myAvatar",udata[0].avatar_url);}
+            const udata=await supa(`users?id=eq.${user.id}&select=avatar_url,user_code`,{},at).catch(()=>null);
+            if(udata&&udata[0]){
+              if(udata[0].avatar_url){setMyAvatar(udata[0].avatar_url);lsSet("myAvatar",udata[0].avatar_url);}
+              if(udata[0].user_code){setMyUserCode(udata[0].user_code);lsSet("userCode",udata[0].user_code);}
+              else{const code=String(Math.floor(1000+Math.random()*9000));await supa(`users?id=eq.${user.id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({user_code:code})},at).catch(()=>{});setMyUserCode(code);lsSet("userCode",code);}
+            }
           }catch(e){console.error(e);}
           window.history.replaceState(null,"",window.location.pathname);
         }
@@ -1192,7 +1225,7 @@ export default function App(){
         onOpenProfile={()=>{setProfileTarget({id:null,name:null});setShowProfile(true);}}
         onSignOut={handleSignOut} onCaptureLater={()=>setShowCaptureLater(true)}
         onViewUser={(id,name)=>{setProfileTarget({id,name});setShowProfile(true);}}
-        userName={myUserName} avatarUrl={myAvatar}/>
+        userName={myUserName} avatarUrl={myAvatar} myUserCode={myUserCode}/>
 
       {tab===0&&(
         <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"100dvh",display:"flex",flexDirection:"column",zIndex:10,background:"#f4f6f3"}}>

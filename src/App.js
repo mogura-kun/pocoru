@@ -1004,9 +1004,19 @@ export default function App(){
     let msg=getFallback(category);
     try{
       const prompt=`「${cl(category)}」に関連した面白い豆知識・雑学、またはクスっとするギャグを1〜2文で日本語で返して。友達に話すような軽いトーンで。${note&&note!=="📷"?`発見メモ:「${note}」。`:""}前置きや締めの言葉は不要。`;
-      const res=await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
-      if(res.ok){const rawText=await res.text();try{const data=JSON.parse(rawText);const text=data.candidates?.[0]?.content?.parts?.[0]?.text;if(text)msg=text.trim();}catch{}}
-    }catch{}
+      const response=await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`,
+        {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({contents:[{parts:[{text:prompt}]}]}),
+        }
+      );
+      if(!response.ok)throw new Error(`HTTP error! status: ${response.status}`);
+      const data=await response.json();
+      const aiText=data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if(aiText)msg=aiText.trim();
+    }catch(error){console.error("Gemini API Error:",error.message);}
     try{
       const token=await getValidToken(sessionRef);
       const finalPhoto=photoEdit?.croppedPhoto||photo||null;

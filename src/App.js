@@ -343,16 +343,39 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
   const already=myHearts.includes(item.id);
   const timeStr=item.custom_time?`${new Date(item.custom_time).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"})} ${roundTimeStr(new Date(item.custom_time))}`:roundTimeStr(new Date(item.posted_at));
   const wEmoji=WEATHERS.find(w=>w.value===item.weather)?.emoji;
-  const colors=["yellow","pink","blue","green","orange"];
+  const color=getColor(item);
+  const [flipped,setFlipped]=useState(false);
+  const [deepText,setDeepText]=useState(null);
+  const [deepLoading,setDeepLoading]=useState(false);
+
+  async function handleFlip(){
+    setFlipped(true);
+    if(!deepText&&!deepLoading){
+      setDeepLoading(true);
+      try{
+        const prompt=`${item.ai_msg}という内容について、散歩中に見つけた${cl(item.category)}に関するもう少し詳しい豆知識や面白い話を3〜4文で教えてください。友達トーンで。`;
+        const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+        if(!response.ok)throw new Error("API error");
+        const data=await response.json();
+        const text=data.candidates?.[0]?.content?.parts?.[0]?.text;
+        setDeepText(text||getFallback(item.category));
+      }catch(e){
+        setDeepText(getFallback(item.category));
+      }finally{
+        setDeepLoading(false);
+      }
+    }
+  }
+
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(58,48,40,0.5)",zIndex:350,display:"flex",alignItems:"flex-end"}}>
       <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#f4f6f3",borderRadius:"28px 28px 0 0",padding:"22px 20px 48px",boxShadow:"0 -6px 30px rgba(0,0,0,0.10)",animation:"slideUp 0.3s ease",maxHeight:"90dvh",overflowY:"auto"}}>
         <div style={{width:40,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 18px"}}/>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:44,height:44,borderRadius:13,background:getBg(getColor(item)),display:"flex",alignItems:"center",justifyContent:"center",opacity:1}}><MotifIcon motif={item.category} color={getColor(item)} size={24} shadow/></div>
+            <div style={{width:44,height:44,borderRadius:13,background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center"}}><MotifIcon motif={item.category} color={color} size={24} shadow/></div>
             <div>
-              <div style={{fontSize:12,fontWeight:700,color:getColor(item),fontFamily:font}}>{item.user_name||cl(item.category)}</div>
+              <div style={{fontSize:12,fontWeight:700,color:color,fontFamily:font}}>{item.user_name||cl(item.category)}</div>
               <div style={{fontSize:11,color:"#bbb",fontFamily:font}}>{timeStr}{wEmoji&&<span style={{marginLeft:5}}>{wEmoji}</span>}</div>
               {item.user_name&&!isOwn&&(
                 <button onClick={()=>{onClose();onViewUser(item.user_id,item.user_name);}} style={{border:"none",background:"none",cursor:"pointer",fontSize:11,color:"#83b195",fontFamily:font,padding:0,marginTop:2,display:"flex",alignItems:"center",gap:4}}>
@@ -368,24 +391,52 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
             <button onClick={onClose} style={{width:28,height:28,borderRadius:"50%",border:"none",background:"#e8e0d8",color:"#aaa",fontSize:14,cursor:"pointer"}}>×</button>
           </div>
         </div>
-        {/* 写真: 大きく表示 */}
-        <div style={{marginBottom:12,opacity:1}}>
+        {/* 写真 */}
+        <div style={{marginBottom:12}}>
           {item.photo
             ?<div style={{background:"white",padding:"8px 8px 32px",boxShadow:"0 3px 14px rgba(0,0,0,0.10)",borderRadius:2,transform:"rotate(-1deg)"}}>
                 <img src={item.photo} alt="" style={{width:"100%",height:240,objectFit:"cover",display:"block",borderRadius:1}}/>
               </div>
             :<div style={{display:"flex",justifyContent:"center",padding:"16px 0"}}>
-                <div style={{width:100,height:100,borderRadius:"50%",background:getBg(getColor(item)),display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <MotifIcon motif={item.category} color={getColor(item)} size={56} shadow/>
+                <div style={{width:100,height:100,borderRadius:"50%",background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <MotifIcon motif={item.category} color={color} size={56} shadow/>
                 </div>
               </div>
           }
         </div>
-        <div style={{marginBottom:12,opacity:1}}><StickyNote text={item.note} colorKey={colors[Math.abs((item.id||"").charCodeAt?.(0)||0)%5]} rotate={-1}/></div>
-        <div style={{background:getBg(getColor(item)),borderRadius:13,padding:"11px 13px",marginBottom:16,borderLeft:`4px solid ${getColor(item)}`}}>
-          <div style={{fontSize:10,color:getColor(item),fontWeight:700,letterSpacing:1,marginBottom:3,fontFamily:font}}>✦ ひとこと</div>
-          <p style={{margin:0,fontSize:13,lineHeight:1.7,color:"#3a3028",fontStyle:"italic",fontFamily:font}}>{item.ai_msg}</p>
-        </div>
+        {/* 投稿コメント */}
+        {item.note&&item.note!=="📷"&&(
+          <div style={{background:"white",borderRadius:16,padding:14,marginBottom:12,boxShadow:"0 1px 4px rgba(0,0,0,0.06)"}}>
+            <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>💬 ひとこと</div>
+            <p style={{margin:0,fontSize:14,lineHeight:1.7,color:"#3a3028",fontFamily:font}}>{item.note}</p>
+          </div>
+        )}
+        {/* AIコメント（フリップカード） */}
+        {item.ai_msg&&(
+          <div style={{perspective:"600px",marginBottom:16}}>
+            <div style={{position:"relative",transformStyle:"preserve-3d",transition:"transform 0.6s",transform:flipped?"rotateY(180deg)":"rotateY(0deg)"}}>
+              {/* 表面 */}
+              <div style={{backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",background:getBg(color),borderRadius:16,padding:14,borderLeft:`4px solid ${color}`}}>
+                <div style={{fontSize:10,color:color,fontWeight:700,letterSpacing:1,marginBottom:4,fontFamily:font}}>✦ AIひとこと</div>
+                <p style={{margin:0,fontSize:13,lineHeight:1.7,color:"#3a3028",fontFamily:font}}>{item.ai_msg}</p>
+                <div style={{textAlign:"right",marginTop:8}}>
+                  <button onClick={handleFlip} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:color,fontFamily:font,fontWeight:700,padding:0}}>もっと詳しく ›</button>
+                </div>
+              </div>
+              {/* 裏面 */}
+              <div style={{backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",transform:"rotateY(180deg)",background:getBg(color),borderRadius:16,padding:14,borderLeft:`4px solid ${color}`,position:"absolute",top:0,left:0,right:0}}>
+                <div style={{fontSize:10,color:color,fontWeight:700,letterSpacing:1,marginBottom:4,fontFamily:font}}>✦ もっと詳しく</div>
+                {deepLoading
+                  ?<p style={{margin:0,fontSize:13,color:"#aaa",fontFamily:font}}>読み込み中…</p>
+                  :<p style={{margin:0,fontSize:13,lineHeight:1.7,color:"#3a3028",fontFamily:font}}>{deepText}</p>
+                }
+                <div style={{textAlign:"left",marginTop:8}}>
+                  <button onClick={()=>setFlipped(false)} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:color,fontFamily:font,fontWeight:700,padding:0}}>‹ 戻る</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div style={{textAlign:"right",marginTop:4}}>
           <button onClick={()=>onHeart(item.id)} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:already?"#d4848a":"#ccc",fontFamily:font,padding:"4px 8px",letterSpacing:1,transition:"color 0.2s"}}>
             ♥ {item.hearts||0}

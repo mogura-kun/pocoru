@@ -967,7 +967,7 @@ export default function App(){
   },[authReady,myUserId]);
 
   const nearby=discoveries.filter(d=>{if(!d.lat||!d.lng)return false;if(!userLocation)return true;return haversine(userLocation.lat,userLocation.lng,d.lat,d.lng)<=5;});
-  function toggleCat(v){const all=CATEGORIES.map(c=>c.value);setVisibleCats(prev=>prev.length===1&&prev[0]===v?all:[v]);}
+  function toggleCat(v){const all=CATEGORIES.map(c=>c.value);setVisibleCats(prev=>{if(prev.length===all.length)return[v];if(prev.includes(v)){const next=prev.filter(x=>x!==v);return next.length===0?all:next;}return[...prev,v];});}
 
   async function handleHeart(id){
     const already=myHearts.includes(id);

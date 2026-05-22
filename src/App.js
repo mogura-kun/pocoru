@@ -300,6 +300,7 @@ function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick
   return(
     <div style={{width:"100%",height:"100%",position:"relative"}}>
       <div ref={mRef} style={{width:"100%",height:"100%"}}/>
+      <div style={{position:"absolute",inset:0,background:"rgba(255,255,255,0.35)",pointerEvents:"none",zIndex:1}}/>
       {!rdy&&<div style={{position:"absolute",inset:0,background:"#ecf0e8",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8}}><div style={{fontSize:32}}>🗺️</div><div style={{fontSize:12,color:"#9ab076",fontFamily:font}}>地図を読み込み中…</div></div>}
     </div>
   );

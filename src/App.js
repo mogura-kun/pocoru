@@ -1069,7 +1069,7 @@ export default function App(){
             if(udata&&udata[0]){
               if(udata[0].avatar_url){setMyAvatar(udata[0].avatar_url);lsSet("myAvatar",udata[0].avatar_url);}
               if(udata[0].user_code){setMyUserCode(udata[0].user_code);lsSet("userCode",udata[0].user_code);}
-              else{const code=String(Math.floor(1000+Math.random()*9000));await supa(`users?id=eq.${user.id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({user_code:code})},at).catch(()=>{});setMyUserCode(code);lsSet("userCode",code);}
+              else{const code=String(Math.floor(100000+Math.random()*900000));await supa(`users?id=eq.${user.id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({user_code:code})},at).catch(()=>{});setMyUserCode(code);lsSet("userCode",code);}
             }
           }catch(e){console.error(e);}
           window.history.replaceState(null,"",window.location.pathname);
@@ -1097,7 +1097,7 @@ export default function App(){
       try{
         const data=await supa(`users?id=eq.${myUserId}&select=user_code`,{},tok);
         if(data&&data[0]?.user_code){setMyUserCode(data[0].user_code);lsSet("userCode",data[0].user_code);}
-        else{const code=String(Math.floor(1000+Math.random()*9000));await supa(`users?id=eq.${myUserId}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({user_code:code})},tok).catch(()=>{});setMyUserCode(code);lsSet("userCode",code);}
+        else{const code=String(Math.floor(100000+Math.random()*900000));await supa(`users?id=eq.${myUserId}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({user_code:code})},tok).catch(()=>{});setMyUserCode(code);lsSet("userCode",code);}
       }catch{}
     })();
   },[myUserId]);

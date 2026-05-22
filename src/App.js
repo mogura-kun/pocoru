@@ -280,7 +280,8 @@ function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick
       const color=getColor(d);
       const m=MOTIF_SVG[d.category]||MOTIF_SVG.sparkle;
       const sz=80,iconOp=Math.max(0,(op-0.3)/0.7).toFixed(3);
-      const icon=L.divIcon({className:"",html:`<div style="position:relative;width:${sz}px;height:${sz}px;display:flex;align-items:center;justify-content:center"><div style="position:absolute;width:90px;height:90px;border-radius:50%;background:${color};filter:blur(20px);opacity:0.12;animation:auraExpand 1.5s ease-out forwards"></div><div style="position:relative;z-index:2;opacity:${iconOp}"><svg width="34" height="34" viewBox="${m.vb}" fill="${color}">${m.d}</svg></div></div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+      const r=parseInt(color.slice(1,3),16),g=parseInt(color.slice(3,5),16),b=parseInt(color.slice(5,7),16);
+      const icon=L.divIcon({className:"",html:`<div style="position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center"><div style="position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(${r},${g},${b},0.08);filter:blur(24px);mix-blend-mode:screen;animation:auraExpand 1.5s ease-out forwards"></div><div style="position:relative;z-index:2;opacity:${iconOp}"><svg width="34" height="34" viewBox="${m.vb}" fill="${color}">${m.d}</svg></div></div>`,iconSize:[120,120],iconAnchor:[60,60]});
       dMk.current.push(L.marker([d.lat,d.lng],{icon}).addTo(iRef.current).on("click",()=>onPinClick(d)));
     });
   },[rdy,discoveries,visibleCats,userLocation]);

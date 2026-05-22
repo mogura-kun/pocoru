@@ -431,12 +431,12 @@ function PhotoEditor({photo,onSave,onClose}){
       ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,cy);ctx.fillRect(0,cy+ch,W,H-(cy+ch));ctx.fillRect(0,cy,cx,ch);ctx.fillRect(cx+cw,cy,W-(cx+cw),ch);
       ctx.strokeStyle="white";ctx.lineWidth=2;ctx.strokeRect(cx,cy,cw,ch);
       [1/3,2/3].forEach(t=>{ctx.strokeStyle="rgba(255,255,255,0.4)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx+cw*t,cy);ctx.lineTo(cx+cw*t,cy+ch);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,cy+ch*t);ctx.lineTo(cx+cw,cy+ch*t);ctx.stroke();});
-      [[cx,cy],[cx+cw,cy],[cx,cy+ch],[cx+cw,cy+ch]].forEach(([hx,hy])=>{ctx.fillStyle="white";ctx.fillRect(hx-5,hy-5,10,10);});
+      [[cx,cy],[cx+cw,cy],[cx,cy+ch],[cx+cw,cy+ch]].forEach(([hx,hy])=>{ctx.shadowColor="rgba(0,0,0,0.3)";ctx.shadowBlur=4;ctx.fillStyle="white";ctx.fillRect(hx-10,hy-10,20,20);ctx.shadowBlur=0;});
     };
     if(img.src!==photo){img.onload=draw;img.src=photo;}else draw();
   },[tab,crop,brightness,contrast,saturate,photo]);
   function getPos(e){const c=canvasRef.current,r=c.getBoundingClientRect(),sx=c.width/r.width,sy=c.height/r.height,t=e.touches?e.touches[0]:e;return{x:(t.clientX-r.left)*sx/c.width,y:(t.clientY-r.top)*sy/c.height};}
-  function onCropStart(e){e.preventDefault();const{x,y}=getPos(e);const{x:cx,y:cy,w:cw,h:ch}=crop,th=0.06;let handle=null;if(Math.abs(x-cx)<th&&Math.abs(y-cy)<th)handle="tl";else if(Math.abs(x-(cx+cw))<th&&Math.abs(y-cy)<th)handle="tr";else if(Math.abs(x-cx)<th&&Math.abs(y-(cy+ch))<th)handle="bl";else if(Math.abs(x-(cx+cw))<th&&Math.abs(y-(cy+ch))<th)handle="br";else if(x>cx&&x<cx+cw&&y>cy&&y<cy+ch)handle="move";if(handle)dragging.current={handle,startX:x,startY:y,startCrop:{...crop}};}
+  function onCropStart(e){e.preventDefault();const{x,y}=getPos(e);const{x:cx,y:cy,w:cw,h:ch}=crop,th=0.12;let handle=null;if(Math.abs(x-cx)<th&&Math.abs(y-cy)<th)handle="tl";else if(Math.abs(x-(cx+cw))<th&&Math.abs(y-cy)<th)handle="tr";else if(Math.abs(x-cx)<th&&Math.abs(y-(cy+ch))<th)handle="bl";else if(Math.abs(x-(cx+cw))<th&&Math.abs(y-(cy+ch))<th)handle="br";else if(x>cx&&x<cx+cw&&y>cy&&y<cy+ch)handle="move";if(handle)dragging.current={handle,startX:x,startY:y,startCrop:{...crop}};}
   function onCropMove(e){e.preventDefault();if(!dragging.current)return;const{x,y}=getPos(e);const{handle,startX,startY,startCrop:sc}=dragging.current;const dx=x-startX,dy=y-startY,min=0.1;let{x:nx,y:ny,w:nw,h:nh}={...sc};if(handle==="move"){nx=Math.max(0,Math.min(1-nw,sc.x+dx));ny=Math.max(0,Math.min(1-nh,sc.y+dy));}else if(handle==="tl"){nx=Math.max(0,Math.min(sc.x+sc.w-min,sc.x+dx));ny=Math.max(0,Math.min(sc.y+sc.h-min,sc.y+dy));nw=sc.x+sc.w-nx;nh=sc.y+sc.h-ny;}else if(handle==="tr"){ny=Math.max(0,Math.min(sc.y+sc.h-min,sc.y+dy));nw=Math.max(min,Math.min(1-sc.x,sc.w+dx));nh=sc.y+sc.h-ny;}else if(handle==="bl"){nx=Math.max(0,Math.min(sc.x+sc.w-min,sc.x+dx));nw=sc.x+sc.w-nx;nh=Math.max(min,Math.min(1-sc.y,sc.h+dy));}else if(handle==="br"){nw=Math.max(min,Math.min(1-sc.x,sc.w+dx));nh=Math.max(min,Math.min(1-sc.y,sc.h+dy));}setCrop({x:nx,y:ny,w:nw,h:nh});}
   function onCropEnd(){dragging.current=null;}
   function handleSave(){
@@ -473,7 +473,7 @@ function PhotoEditor({photo,onSave,onClose}){
             {[{label:"☀️ 明るさ",val:brightness,set:setBrightness,min:50,max:200},{label:"◑ コントラスト",val:contrast,set:setContrast,min:50,max:200},{label:"🎨 彩度",val:saturate,set:setSaturate,min:0,max:200}].map(s=>(
               <div key={s.label} style={{marginBottom:9}}>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}><span style={{fontSize:11,color:"#888",fontFamily:font}}>{s.label}</span><span style={{fontSize:10,color:"#bbb",fontFamily:font}}>{s.val}</span></div>
-                <input type="range" min={s.min} max={s.max} value={s.val} onChange={e=>s.set(Number(e.target.value))} style={{width:"100%",accentColor:"#83b195"}}/>
+                <input type="range" min={s.min} max={s.max} value={s.val} onChange={e=>s.set(Number(e.target.value))} style={{width:"100%",accentColor:"#83b195",height:36,padding:"8px 0",cursor:"pointer",touchAction:"manipulation",display:"block"}}/>
               </div>
             ))}
           </>

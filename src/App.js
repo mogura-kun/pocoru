@@ -399,52 +399,45 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
         <div style={{display:"flex",justifyContent:"center",marginBottom:16}}>
           <Polaroid photo={item.photo} emoji={item.emoji} category={item.category} note={item.note} rotate={itemRot(item.id)}/>
         </div>
-        {/* 付箋（めくるアニメーション） */}
+        {/* 付箋（2枚重ね・めくりアニメーション） */}
         {item.ai_msg&&(
-          <div style={{perspective:"400px",marginBottom:16}}>
+          <div style={{position:"relative",marginBottom:24,cursor:flipped?"default":"pointer"}}
+            onClick={()=>{if(!flipped)handleFlip();}}>
+            {/* 下の付箋（深掘り内容） */}
             <div style={{
-              position:"relative",
-              transformStyle:"preserve-3d",
-              transition:"transform 0.5s ease",
-              transform:flipped?"rotateX(-180deg)":"rotateX(0deg)",
-              transformOrigin:"top center",
+              position:"absolute",top:8,left:4,right:-4,
+              background:"#bae6fd",
+              borderRadius:4,padding:"16px 14px 12px",minHeight:80,
+              boxShadow:"2px 3px 8px rgba(0,0,0,0.09)",
+              fontFamily:font,fontSize:13,lineHeight:1.7,color:"#3a3028",
+              zIndex:1,
             }}>
-              {/* 表面 */}
-              <div style={{
-                backfaceVisibility:"hidden",
-                WebkitBackfaceVisibility:"hidden",
-                background:stickyBg,
-                padding:"16px 14px 12px",
-                boxShadow:"2px 3px 6px rgba(0,0,0,0.09)",
-                fontFamily:font,fontSize:13,lineHeight:1.7,color:"#3a3028",borderRadius:2,
-                position:"relative",
-              }}>
-                <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:22,height:5,background:"rgba(0,0,0,0.08)",borderRadius:"0 0 4px 4px"}}/>
-                <p style={{margin:"0 0 10px 0"}}>{item.ai_msg}</p>
-                <div style={{textAlign:"right"}}>
-                  <button onClick={handleFlip} style={{border:"none",background:"rgba(0,0,0,0.09)",borderRadius:6,padding:"3px 10px",fontSize:11,cursor:"pointer",fontFamily:font,color:"#3a3028",fontWeight:700}}>めくる ›</button>
-                </div>
-              </div>
-              {/* 裏面 */}
-              <div style={{
-                transform:"rotateX(180deg)",
-                backfaceVisibility:"hidden",
-                WebkitBackfaceVisibility:"hidden",
-                background:stickyBg,
-                padding:"16px 14px 12px",
-                boxShadow:"2px 3px 6px rgba(0,0,0,0.09)",
-                fontFamily:font,fontSize:13,lineHeight:1.7,color:"#3a3028",borderRadius:2,
-                position:"absolute",top:0,left:0,right:0,
-              }}>
-                <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:22,height:5,background:"rgba(0,0,0,0.08)",borderRadius:"0 0 4px 4px"}}/>
-                {loadingDeep
-                  ?<p style={{margin:"0 0 10px 0",color:"#888"}}>読み込み中…</p>
-                  :<p style={{margin:"0 0 10px 0"}}>{deepMsg||"　"}</p>
-                }
-                <div style={{textAlign:"right"}}>
-                  <button onClick={()=>setFlipped(false)} style={{border:"none",background:"rgba(0,0,0,0.09)",borderRadius:6,padding:"3px 10px",fontSize:11,cursor:"pointer",fontFamily:font,color:"#3a3028",fontWeight:700}}>‹ 戻る</button>
-                </div>
-              </div>
+              {loadingDeep
+                ?<p style={{margin:"0 0 8px 0",color:"#888"}}>読み込み中…</p>
+                :<p style={{margin:"0 0 8px 0"}}>{deepMsg||"　"}</p>
+              }
+              {flipped&&(
+                <button onClick={e=>{e.stopPropagation();setFlipped(false);}}
+                  style={{fontSize:11,color:"#aaa",border:"none",background:"none",cursor:"pointer",marginTop:4,padding:0,fontFamily:font}}>
+                  ‹ 戻る
+                </button>
+              )}
+            </div>
+            {/* 上の付箋（AIコメント・めくれて消える） */}
+            <div style={{
+              position:"relative",zIndex:2,
+              background:stickyBg,
+              padding:"16px 14px 12px",
+              boxShadow:"2px 3px 6px rgba(0,0,0,0.09)",
+              fontFamily:font,fontSize:13,lineHeight:1.7,color:"#3a3028",borderRadius:2,
+              transition:"transform 0.5s ease, opacity 0.4s ease",
+              transform:flipped?"translateY(-18px) rotate(-2deg)":"translateY(0) rotate(0deg)",
+              opacity:flipped?0:1,
+              pointerEvents:flipped?"none":"auto",
+            }}>
+              <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:22,height:5,background:"rgba(0,0,0,0.08)",borderRadius:"0 0 4px 4px"}}/>
+              <p style={{margin:"0 0 8px 0"}}>{item.ai_msg}</p>
+              <div style={{textAlign:"right",fontSize:11,color:"#aaa"}}>めくる ›</div>
             </div>
           </div>
         )}

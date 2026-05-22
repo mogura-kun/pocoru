@@ -1089,6 +1089,19 @@ export default function App(){
     init();
   },[]);
 
+  useEffect(()=>{
+    if(!myUserId||myUserCode)return;
+    const tok=sessionRef.current?.access_token;
+    if(!tok)return;
+    (async()=>{
+      try{
+        const data=await supa(`users?id=eq.${myUserId}&select=user_code`,{},tok);
+        if(data&&data[0]?.user_code){setMyUserCode(data[0].user_code);lsSet("userCode",data[0].user_code);}
+        else{const code=String(Math.floor(1000+Math.random()*9000));await supa(`users?id=eq.${myUserId}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({user_code:code})},tok).catch(()=>{});setMyUserCode(code);lsSet("userCode",code);}
+      }catch{}
+    })();
+  },[myUserId]);
+
   async function fetchAll(){
     try{
       const since=new Date(Date.now()-7*24*3600000).toISOString();

@@ -967,7 +967,7 @@ export default function App(){
   },[authReady,myUserId]);
 
   const nearby=discoveries.filter(d=>{if(!d.lat||!d.lng)return false;if(!userLocation)return true;return haversine(userLocation.lat,userLocation.lng,d.lat,d.lng)<=5;});
-  function toggleCat(v){setVisibleCats(prev=>prev.includes(v)?prev.length>1?prev.filter(x=>x!==v):prev:[...prev,v]);}
+  function toggleCat(v){const all=CATEGORIES.map(c=>c.value);setVisibleCats(prev=>prev.length===1&&prev[0]===v?all:[v]);}
 
   async function handleHeart(id){
     const already=myHearts.includes(id);

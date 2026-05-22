@@ -306,7 +306,70 @@ function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick
   );
 }
 
-function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater,userName,avatarUrl}){
+function UserSearchModal({onClose,onViewUser}){
+  const [query,setQuery]=useState("");
+  const [results,setResults]=useState([]);
+  const [loading,setLoading]=useState(false);
+  const [postCounts,setPostCounts]=useState({});
+  const timerRef=useRef(null);
+
+  useEffect(()=>{
+    if(!query.trim()){setResults([]);return;}
+    clearTimeout(timerRef.current);
+    timerRef.current=setTimeout(async()=>{
+      setLoading(true);
+      try{
+        const data=await supa(`users?name=ilike.*${encodeURIComponent(query.trim())}*&select=id,name,bio,avatar_url&limit=20`);
+        const users=data||[];
+        setResults(users);
+        if(users.length>0){
+          const ids=users.map(u=>u.id).join(",");
+          const posts=await supa(`discoveries?user_id=in.(${ids})&select=user_id`);
+          const counts={};
+          (posts||[]).forEach(p=>{counts[p.user_id]=(counts[p.user_id]||0)+1;});
+          setPostCounts(counts);
+        }
+      }catch{setResults([]);}
+      setLoading(false);
+    },300);
+    return()=>clearTimeout(timerRef.current);
+  },[query]);
+
+  return(
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(58,48,40,0.5)",zIndex:210,display:"flex",alignItems:"flex-end"}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#f4f6f3",borderRadius:"28px 28px 0 0",padding:"20px 20px 0",boxShadow:"0 -6px 30px rgba(0,0,0,0.10)",animation:"slideUp 0.3s ease",maxHeight:"80dvh",display:"flex",flexDirection:"column"}}>
+        <div style={{width:40,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 16px"}}/>
+        <div style={{fontSize:15,fontWeight:800,fontFamily:font,marginBottom:12}}>🔍 ユーザーを探す</div>
+        <div style={{position:"relative",marginBottom:12,flexShrink:0}}>
+          <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ユーザーネームで検索…" autoFocus
+            style={{width:"100%",padding:"10px 14px 10px 38px",borderRadius:12,border:"1.5px solid #e8e0d8",fontSize:14,fontFamily:font,outline:"none",background:"white",boxSizing:"border-box"}}/>
+          <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15,pointerEvents:"none"}}>🔍</span>
+        </div>
+        <div style={{overflowY:"auto",flex:1,paddingBottom:"max(24px,env(safe-area-inset-bottom))"}}>
+          {loading&&<div style={{textAlign:"center",padding:"20px 0",color:"#bbb",fontFamily:font,fontSize:13}}>検索中…</div>}
+          {!loading&&query.trim()&&results.length===0&&<div style={{textAlign:"center",padding:"30px 0",color:"#ccc",fontFamily:font,fontSize:13}}>見つかりませんでした</div>}
+          {results.map(u=>(
+            <button key={u.id} onClick={()=>{onClose();onViewUser(u.id,u.name);}}
+              style={{width:"100%",padding:"12px 0",border:"none",borderBottom:"1px solid #f0ebe4",background:"transparent",textAlign:"left",cursor:"pointer",display:"flex",alignItems:"center",gap:12,fontFamily:font}}>
+              <div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",background:"#e5ede0",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                {u.avatar_url?<img src={u.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:20}}>👤</span>}
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:700,color:"#3a3028"}}>{u.name}</div>
+                {u.bio&&<div style={{fontSize:11,color:"#aaa",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.bio}</div>}
+                <div style={{fontSize:10,color:"#83b195",marginTop:2}}>発見 {postCounts[u.id]||0}件</div>
+              </div>
+              <span style={{fontSize:12,color:"#ccc",flexShrink:0}}>›</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater,onViewUser,userName,avatarUrl}){
+  const [showUserSearch,setShowUserSearch]=useState(false);
   return(
     <>
       {open&&<div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:200}}/>}
@@ -322,6 +385,7 @@ function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater
             {emoji:"🕐",label:"後から投稿",sub:"日時・場所を指定して投稿",action:()=>{onClose();onCaptureLater();}},
             {emoji:"📖",label:"思い出",sub:"自分の発見・永久保存",action:()=>{onClose();onSetTab(2);}},
             {emoji:"👤",label:"マイページ",sub:"他の人から見た自分",action:()=>{onClose();onOpenProfile();}},
+            {emoji:"🔍",label:"ユーザーを探す",sub:"ユーザーネームで検索",action:()=>setShowUserSearch(true)},
           ].map((m,i)=>(
             <button key={i} onClick={m.action||onClose} style={{width:"100%",padding:"13px 20px",border:"none",background:"transparent",textAlign:"left",cursor:"pointer",display:"flex",alignItems:"center",gap:12,fontFamily:font}}>
               <span style={{fontSize:18}}>{m.emoji}</span>
@@ -334,6 +398,7 @@ function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater
           <button onClick={onClose} style={{width:"100%",padding:"11px 0",borderRadius:13,border:"none",background:"#83b195",color:"white",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:font}}>閉じる</button>
         </div>
       </div>
+      {showUserSearch&&<UserSearchModal onClose={()=>setShowUserSearch(false)} onViewUser={(id,name)=>{setShowUserSearch(false);onClose();onViewUser(id,name);}}/>}
     </>
   );
 }
@@ -1126,6 +1191,7 @@ export default function App(){
       <SlideMenu open={menuOpen} onClose={()=>setMenuOpen(false)} onSetTab={setTab}
         onOpenProfile={()=>{setProfileTarget({id:null,name:null});setShowProfile(true);}}
         onSignOut={handleSignOut} onCaptureLater={()=>setShowCaptureLater(true)}
+        onViewUser={(id,name)=>{setProfileTarget({id,name});setShowProfile(true);}}
         userName={myUserName} avatarUrl={myAvatar}/>
 
       {tab===0&&(

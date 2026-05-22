@@ -821,7 +821,10 @@ function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,
               {isMe&&<input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{display:"none"}}/>}
             </div>
             <div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:font}}>{userName||"ゲスト"}</div>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <div style={{fontSize:18,fontWeight:800,fontFamily:font}}>{userName||"ゲスト"}</div>
+                {isMe&&!editMode&&<button onClick={()=>{setEditName(myUserName||"");setEditMode(true);}} style={{fontSize:11,color:"#8aaa7a",border:"1px solid #8aaa7a",borderRadius:8,padding:"3px 8px",background:"white",cursor:"pointer",fontFamily:font,fontWeight:600,flexShrink:0}}>編集 ✏️</button>}
+              </div>
               <div style={{display:"flex",gap:12,marginTop:4}}>
                 <button onClick={()=>loadFollowUsers('following')} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:"#3a3028",fontFamily:font,padding:0}}>フォロー <span style={{fontWeight:700,color:"#83b195"}}>{following.length}</span></button>
                 <button onClick={()=>loadFollowUsers('followers')} style={{border:"none",background:"none",cursor:"pointer",fontSize:12,color:"#3a3028",fontFamily:font,padding:0}}>フォロワー <span style={{fontWeight:700,color:"#83b195"}}>{followers.length}</span></button>
@@ -834,9 +837,6 @@ function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,
             <button onClick={onClose} style={{width:28,height:28,borderRadius:"50%",border:"none",background:"#e8e0d8",color:"#aaa",fontSize:13,cursor:"pointer"}}>×</button>
           </div>
         </div>
-        {isMe&&!editMode&&(
-          <button onClick={()=>{setEditName(myUserName||"");setEditMode(true);}} style={{width:"100%",padding:"8px 0",borderRadius:9,border:"1.5px solid #e8e0d8",background:"white",color:"#83b195",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font,marginBottom:13}}>プロフィールを編集</button>
-        )}
         {isMe&&editMode&&(
           <div style={{background:"white",borderRadius:13,padding:12,marginBottom:13,boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
             <div style={{fontSize:11,fontWeight:700,color:"#83b195",marginBottom:7,fontFamily:font}}>プロフィール編集</div>

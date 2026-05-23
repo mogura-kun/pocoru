@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, memo } from "react";
 
 const SUPA_URL = process.env.REACT_APP_SUPA_URL;
 const SUPA_KEY = process.env.REACT_APP_SUPA_KEY;
@@ -251,7 +251,7 @@ function PinEditMap({lat,lng,onMove}){
   );
 }
 
-const LiveMap=React.memo(function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick,centerMeRef}){
+const LiveMap=memo(function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick,centerMeRef}){
   const mRef=useRef(null),iRef=useRef(null),dMk=useRef([]),uMk=useRef(null),uCi=useRef(null),wMk=useRef([]);
   const [rdy,setRdy]=useState(false);
   useLeaflet(()=>setRdy(true));
@@ -989,7 +989,7 @@ function LoginScreen(){
   );
 }
 
-const CorkBoard=React.memo(function CorkBoard({items,onItemClick,showUser=false}){
+const CorkBoard=memo(function CorkBoard({items,onItemClick,showUser=false}){
   const stickyColors=["yellow","pink","blue","green","orange"];
   if(items.length===0)return <div style={{textAlign:"center",padding:"50px 0",color:"rgba(255,255,255,0.7)"}}><div style={{fontSize:36,marginBottom:10}}>🌱</div><div style={{fontSize:13,fontFamily:font}}>まだ投稿がありません</div></div>;
   return(

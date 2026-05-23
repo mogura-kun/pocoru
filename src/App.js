@@ -467,19 +467,24 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(58,48,40,0.5)",zIndex:350,display:"flex",alignItems:"flex-end"}}>
       <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#f4f6f3",borderRadius:"28px 28px 0 0",padding:"22px 20px 48px",boxShadow:"0 -6px 30px rgba(0,0,0,0.10)",animation:"slideUp 0.3s ease",maxHeight:"90dvh",overflowY:"auto"}}>
         <div style={{width:40,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 18px"}}/>
-        {/* ヘッダー */}
+        {/* ヘッダー: [モチーフアイコン] [ユーザーアイコン ユーザーネーム / 時間] */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
           <div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}>
-            <div style={{width:40,height:40,borderRadius:12,background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><MotifIcon motif={item.category} color={color} size={22} shadow/></div>
-            <div style={{flexShrink:0}}>
-              {(()=>{const av=isOwn?(myAvatar||item.user_avatar):item.user_avatar;return av?<img src={av} alt="" style={{width:32,height:32,borderRadius:"50%",objectFit:"cover"}} onError={e=>{e.target.style.display="none";}}/>:<div style={{width:32,height:32,borderRadius:"50%",background:"#ddd",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>👤</div>;})()}
+            {/* モチーフアイコン */}
+            <div style={{width:40,height:40,borderRadius:12,background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <MotifIcon motif={item.category} color={color} size={22} shadow/>
             </div>
-            <div style={{minWidth:0}}>
-              {item.user_name&&!isOwn
-                ?<button onClick={()=>{onClose();onViewUser(item.user_id,item.user_name);}} style={{border:"none",background:"none",cursor:"pointer",fontSize:13,fontWeight:700,color:color,fontFamily:font,padding:0,display:"block",textAlign:"left"}}>{item.user_name}</button>
-                :<div style={{fontSize:13,fontWeight:700,color:color,fontFamily:font}}>{item.user_name||cl(item.category)}</div>
-              }
-              <div style={{fontSize:11,color:"#bbb",fontFamily:font}}>{timeStr}{wEmoji&&<span style={{marginLeft:5}}>{wEmoji}</span>}</div>
+            {/* ユーザーアイコン + ユーザーネーム（横並び） */}
+            <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flex:1}}>
+              {(()=>{const av=isOwn?(myAvatar||item.user_avatar):item.user_avatar;return av?<img src={av} alt="" style={{width:32,height:32,borderRadius:"50%",objectFit:"cover",flexShrink:0}} onError={e=>{e.target.style.display="none";}}/>:<div style={{width:32,height:32,borderRadius:"50%",background:"#ddd",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>👤</div>;})()}
+              <div style={{minWidth:0}}>
+                {item.user_name&&!isOwn
+                  ?<button onClick={()=>{onClose();onViewUser(item.user_id,item.user_name);}} style={{border:"none",background:"none",cursor:"pointer",fontSize:13,fontWeight:700,color:color,fontFamily:font,padding:0,display:"block",textAlign:"left"}}>{item.user_name}</button>
+                  :<div style={{fontSize:13,fontWeight:700,color:color,fontFamily:font}}>{item.user_name||cl(item.category)}</div>
+                }
+                {/* ユーザーネームの下に時間 */}
+                <div style={{fontSize:11,color:"#bbb",fontFamily:font}}>{timeStr}{wEmoji&&<span style={{marginLeft:5}}>{wEmoji}</span>}</div>
+              </div>
             </div>
           </div>
           <div style={{display:"flex",gap:6,flexShrink:0}}>

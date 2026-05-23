@@ -1043,13 +1043,20 @@ export default function App(){
   const [userLocation,setUserLocation]=useState(null);
   const [locStatus,setLocStatus]=useState("idle");
   const [visibleCats,setVisibleCats]=useState(CATEGORIES.map(c=>c.value));
-  const watchIdRef=useRef(null),centerMeRef=useRef(null),sessionRef=useRef(null),lastPostRef=useRef(0);
+  const watchIdRef=useRef(null),centerMeRef=useRef(null),sessionRef=useRef(null),lastPostRef=useRef(0),lastGpsRef=useRef(0);
 
   useEffect(()=>{
     if(!navigator.geolocation){setLocStatus("denied");return;}
     setLocStatus("loading");
     watchIdRef.current=navigator.geolocation.watchPosition(
-      pos=>{setUserLocation({lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy});setLocStatus("ok");},
+      pos=>{
+        setLocStatus("ok");
+        const now=Date.now();
+        if(now-lastGpsRef.current>=3000){
+          lastGpsRef.current=now;
+          setUserLocation({lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy});
+        }
+      },
       ()=>setLocStatus("denied"),{enableHighAccuracy:true,maximumAge:5000,timeout:15000}
     );
     return()=>{if(watchIdRef.current!=null)navigator.geolocation.clearWatch(watchIdRef.current);};
@@ -1244,8 +1251,7 @@ export default function App(){
         onViewUser={(id,name)=>{setProfileTarget({id,name});setShowProfile(true);}}
         userName={myUserName} avatarUrl={myAvatar} myUserCode={myUserCode}/>
 
-      {tab===0&&(
-        <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"100dvh",display:"flex",flexDirection:"column",zIndex:10,background:"#f4f6f3"}}>
+      <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"100dvh",display:"flex",flexDirection:"column",zIndex:10,background:"#f4f6f3",visibility:tab===0?undefined:"hidden",pointerEvents:tab===0?undefined:"none"}}>
           <div style={{flexShrink:0,paddingTop:"env(safe-area-inset-top,44px)",background:"#f4f6f3",borderBottom:"1px solid rgba(0,0,0,0.08)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 16px 0"}}>
               <div style={{fontSize:15,fontWeight:800,color:"#3a3028"}}>🌱 今日の発見</div>
@@ -1275,7 +1281,6 @@ export default function App(){
             <button onClick={()=>globalCameraRef.current?.click()} style={{width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"#83b195",color:"white",fontSize:26,fontWeight:700,boxShadow:"0 4px 16px rgba(131,177,149,0.45)",display:"flex",alignItems:"center",justifyContent:"center",marginLeft:"auto"}}>+</button>
           </div>
         </div>
-      )}
 
       {tab!==0&&(
         <>

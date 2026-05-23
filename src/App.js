@@ -1050,10 +1050,10 @@ export default function App(){
     setLocStatus("loading");
     watchIdRef.current=navigator.geolocation.watchPosition(
       pos=>{
-        setLocStatus("ok");
         const now=Date.now();
         if(now-lastGpsRef.current>=3000){
           lastGpsRef.current=now;
+          setLocStatus("ok");
           setUserLocation({lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy});
         }
       },

@@ -284,7 +284,7 @@ function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick
       const icon=L.divIcon({className:"",html:`<div style="position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center"><div style="position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(${r},${g},${b},0.08);filter:blur(24px);mix-blend-mode:screen;animation:auraExpand 1.5s ease-out forwards"></div><div style="position:relative;z-index:2;opacity:${iconOp}"><svg width="34" height="34" viewBox="${m.vb}" fill="${color}">${m.d}</svg></div></div>`,iconSize:[120,120],iconAnchor:[60,60]});
       dMk.current.push(L.marker([d.lat,d.lng],{icon}).addTo(iRef.current).on("click",()=>onPinClick(d)));
     });
-  },[rdy,discoveries,visibleCats,userLocation]);
+  },[rdy,discoveries,visibleCats]);
   useEffect(()=>{
     if(!rdy||!iRef.current)return;
     const L=window.L;
@@ -1151,7 +1151,8 @@ export default function App(){
   const nearby=useMemo(()=>discoveries.filter(d=>{if(!d.lat||!d.lng)return false;if(!userLocation)return true;return haversine(userLocation.lat,userLocation.lng,d.lat,d.lng)<=5;}),[discoveries,userLocation]);
   const timelineItems=useMemo(()=>{
     const ago=Date.now()-7*24*3600*1000;
-    return[...nearby,...followingPosts.filter(d=>!nearby.find(n=>n.id===d.id))].filter(d=>visibleCats.includes(d.category)&&new Date(d.custom_time||d.posted_at).getTime()>=ago).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
+    const nearbyIds=new Set(nearby.map(d=>d.id));
+    return[...nearby,...followingPosts.filter(d=>!nearbyIds.has(d.id))].filter(d=>visibleCats.includes(d.category)&&new Date(d.custom_time||d.posted_at).getTime()>=ago).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
   },[nearby,followingPosts,visibleCats]);
   const memoryItems=useMemo(()=>myDiscoveries.filter(d=>visibleCats.includes(d.category)).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at)),[myDiscoveries,visibleCats]);
   function toggleCat(v){const all=CATEGORIES.map(c=>c.value);setVisibleCats(prev=>{if(prev.length===all.length)return[v];if(prev.includes(v)){const next=prev.filter(x=>x!==v);return next.length===0?all:next;}return[...prev,v];});}

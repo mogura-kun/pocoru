@@ -1142,6 +1142,11 @@ export default function App(){
   },[authReady,myUserId]);
 
   const nearby=useMemo(()=>discoveries.filter(d=>{if(!d.lat||!d.lng)return false;if(!userLocation)return true;return haversine(userLocation.lat,userLocation.lng,d.lat,d.lng)<=5;}),[discoveries,userLocation]);
+  const timelineItems=useMemo(()=>{
+    const ago=Date.now()-7*24*3600*1000;
+    return[...nearby,...followingPosts.filter(d=>!nearby.find(n=>n.id===d.id))].filter(d=>visibleCats.includes(d.category)&&new Date(d.custom_time||d.posted_at).getTime()>=ago).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
+  },[nearby,followingPosts,visibleCats]);
+  const memoryItems=useMemo(()=>myDiscoveries.filter(d=>visibleCats.includes(d.category)).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at)),[myDiscoveries,visibleCats]);
   function toggleCat(v){const all=CATEGORIES.map(c=>c.value);setVisibleCats(prev=>{if(prev.length===all.length)return[v];if(prev.includes(v)){const next=prev.filter(x=>x!==v);return next.length===0?all:next;}return[...prev,v];});}
 
   async function handleHeart(id){
@@ -1223,12 +1228,6 @@ export default function App(){
   if(!authReady)return <div style={{minHeight:"100dvh",background:"#f4f6f3",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12,fontFamily:font}}><div style={{fontSize:44}}>🌱</div><div style={{fontSize:12,color:"#aaa"}}>読み込み中…</div></div>;
   if(!myUserId)return <LoginScreen/>;
 
-  // タイムライン: 5km圏内 + フォローユーザーの投稿（重複排除・時系列・1週間以内）
-  const timelineItems=useMemo(()=>{
-    const ago=Date.now()-7*24*3600*1000;
-    return[...nearby,...followingPosts.filter(d=>!nearby.find(n=>n.id===d.id))].filter(d=>visibleCats.includes(d.category)&&new Date(d.custom_time||d.posted_at).getTime()>=ago).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
-  },[nearby,followingPosts,visibleCats]);
-  const memoryItems=useMemo(()=>myDiscoveries.filter(d=>visibleCats.includes(d.category)).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at)),[myDiscoveries,visibleCats]);
   const TABS=["ホーム","タイムライン","思い出"];
 
   return(

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, startTransition, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 const SUPA_URL = process.env.REACT_APP_SUPA_URL;
 const SUPA_KEY = process.env.REACT_APP_SUPA_KEY;
@@ -1017,6 +1017,7 @@ const SEL_FIELDS="id,note,category,emoji,photo,weather,lat,lng,ai_msg,hearts,use
 
 export default function App(){
   const [tab,setTab]=useState(0);
+  const [timelineReady,setTimelineReady]=useState(false);
   const [discoveries,setDiscoveries]=useState([]);
   const [followingPosts,setFollowingPosts]=useState([]);
   const [myDiscoveries,setMyDiscoveries]=useState([]);
@@ -1111,23 +1112,24 @@ export default function App(){
     try{
       const since=new Date(Date.now()-7*24*3600000).toISOString();
       const data=await supa(`discoveries?posted_at=gte.${since}&order=posted_at.desc&limit=100&select=${SEL_FIELDS}`);
-      startTransition(()=>setDiscoveries(data||[]));
+      setDiscoveries(data||[]);
     }catch(e){console.error(e);}
+    finally{setTimelineReady(true);}
   }
   async function fetchFollowingPosts(uid){
     try{
       const follows=await supa(`follows?follower_id=eq.${uid}&select=following_id`);
       const ids=(follows||[]).map(f=>f.following_id).filter(Boolean);
-      if(!ids.length){startTransition(()=>setFollowingPosts([]));return;}
+      if(!ids.length){setFollowingPosts([]);return;}
       const since=new Date(Date.now()-7*24*3600000).toISOString();
       const data=await supa(`discoveries?user_id=in.(${ids.join(',')})&posted_at=gte.${since}&order=posted_at.desc&limit=100&select=${SEL_FIELDS}`);
-      startTransition(()=>setFollowingPosts(data||[]));
+      setFollowingPosts(data||[]);
     }catch{setFollowingPosts([]);}
   }
   async function fetchMy(uid){
     try{
       const data=await supa(`discoveries?user_id=eq.${uid}&order=posted_at.desc&limit=200&select=${SEL_FIELDS}`);
-      startTransition(()=>setMyDiscoveries(data||[]));
+      setMyDiscoveries(data||[]);
     }catch(e){console.error(e);}
   }
   async function fetchWeather(){
@@ -1205,10 +1207,8 @@ export default function App(){
           const aiText=data?.choices?.[0]?.message?.content?.trim();
           if(aiText&&entry?.id){
             supa(`discoveries?id=eq.${entry.id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({ai_msg:aiText})},token).catch(()=>{});
-            startTransition(()=>{
-              setDiscoveries(prev=>prev.map(d=>d.id===entry.id?{...d,ai_msg:aiText}:d));
-              setMyDiscoveries(prev=>prev.map(d=>d.id===entry.id?{...d,ai_msg:aiText}:d));
-            });
+            setDiscoveries(prev=>prev.map(d=>d.id===entry.id?{...d,ai_msg:aiText}:d));
+            setMyDiscoveries(prev=>prev.map(d=>d.id===entry.id?{...d,ai_msg:aiText}:d));
             setAiMsg(aiText);
           }
         }).catch(()=>{});
@@ -1267,7 +1267,7 @@ export default function App(){
             {nearby.length>0&&<div style={{position:"absolute",bottom:8,left:"50%",transform:"translateX(-50%)",zIndex:1000,background:"rgba(255,252,245,0.95)",borderRadius:16,padding:"5px 14px",boxShadow:"0 2px 10px rgba(0,0,0,0.1)",fontSize:11,color:"#83b195",fontWeight:700,whiteSpace:"nowrap"}}>👥 半径5km内に{nearby.length}件</div>}
           </div>
           <div style={{flexShrink:0,background:"#f4f6f3",borderTop:"1px solid rgba(0,0,0,0.08)",display:"flex",alignItems:"center",padding:`10px 24px env(safe-area-inset-bottom,16px)`}}>
-            <button onClick={()=>startTransition(()=>setTab(1))} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,border:"none",background:"none",cursor:"pointer",color:"#888"}}>
+            <button onClick={()=>setTab(1)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,border:"none",background:"none",cursor:"pointer",color:"#888"}}>
               <span style={{fontSize:18}}>🗒️</span>
               <span style={{fontSize:10,fontWeight:500,fontFamily:font}}>タイムライン</span>
             </button>
@@ -1289,7 +1289,15 @@ export default function App(){
             </div>
           </div>
           <div style={{flex:1,overflowY:"auto",paddingBottom:80,minHeight:0}}>
-            {tab===1&&<div style={{background:"#7db9e3",minHeight:"100%",padding:"10px 8px 80px"}}><CorkBoard items={timelineItems} onItemClick={setSelected} showUser={true}/></div>}
+            {tab===1&&<div style={{background:"#7db9e3",minHeight:"100%",padding:"10px 8px 80px"}}>
+              {!timelineReady
+                ?<div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",paddingTop:60,gap:12}}>
+                  <div style={{fontSize:32,animation:"spin 1s linear infinite"}}>🌀</div>
+                  <div style={{fontSize:12,color:"rgba(255,255,255,0.8)",fontFamily:font}}>読み込み中…</div>
+                </div>
+                :<CorkBoard items={timelineItems} onItemClick={setSelected} showUser={true}/>
+              }
+            </div>}
             {tab===2&&<div style={{background:"#99d0bc",minHeight:"100%",padding:"10px 8px 80px"}}><CorkBoard items={memoryItems} onItemClick={setSelected} showUser={false}/></div>}
           </div>
           {!showCapture&&!showAI&&!selected&&!showWeatherPanel&&!showProfile&&!editTarget&&(
@@ -1315,7 +1323,7 @@ export default function App(){
       <input ref={globalCameraRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=ev=>{setInitialPhoto(ev.target.result);setShowCapture(true);};r.readAsDataURL(f);e.target.value="";}}/>
       {showCapture&&<PostForm initialData={initialPhoto?{photo:initialPhoto}:{}} userLocation={userLocation} locStatus={locStatus} onSave={handleSave} onClose={()=>{setShowCapture(false);setInitialPhoto(null);}}/>}
       {showCaptureLater&&<PostForm laterMode userLocation={userLocation} locStatus={locStatus} onSave={handleSave} onClose={()=>setShowCaptureLater(false)} title="後から投稿する 🕐"/>}
-      <style>{`@keyframes slideUp{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}@keyframes auraExpand{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:0.3}}.leaflet-container{font-family:${font}!important}.leaflet-control-attribution{font-size:9px!important}.leaflet-top,.leaflet-bottom{z-index:400!important}.leaflet-pane{z-index:300!important}`}</style>
+      <style>{`@keyframes slideUp{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes auraExpand{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:0.3}}.leaflet-container{font-family:${font}!important}.leaflet-control-attribution{font-size:9px!important}.leaflet-top,.leaflet-bottom{z-index:400!important}.leaflet-pane{z-index:300!important}`}</style>
     </div>
   );
 }

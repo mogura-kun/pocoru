@@ -251,7 +251,7 @@ function PinEditMap({lat,lng,onMove}){
   );
 }
 
-function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick,centerMeRef}){
+const LiveMap=React.memo(function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick,centerMeRef}){
   const mRef=useRef(null),iRef=useRef(null),dMk=useRef([]),uMk=useRef(null),uCi=useRef(null),wMk=useRef([]);
   const [rdy,setRdy]=useState(false);
   useLeaflet(()=>setRdy(true));
@@ -304,7 +304,7 @@ function LiveMap({discoveries,weatherReports,userLocation,visibleCats,onPinClick
       {!rdy&&<div style={{position:"absolute",inset:0,background:"#ecf0e8",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8}}><div style={{fontSize:32}}>🗺️</div><div style={{fontSize:12,color:"#9ab076",fontFamily:font}}>地図を読み込み中…</div></div>}
     </div>
   );
-}
+});
 
 function UserSearchModal({onClose,onViewUser,myUserName,myUserCode}){
   const [showMyId,setShowMyId]=useState(false);
@@ -989,7 +989,7 @@ function LoginScreen(){
   );
 }
 
-function CorkBoard({items,onItemClick,showUser=false}){
+const CorkBoard=React.memo(function CorkBoard({items,onItemClick,showUser=false}){
   const stickyColors=["yellow","pink","blue","green","orange"];
   if(items.length===0)return <div style={{textAlign:"center",padding:"50px 0",color:"rgba(255,255,255,0.7)"}}><div style={{fontSize:36,marginBottom:10}}>🌱</div><div style={{fontSize:13,fontFamily:font}}>まだ投稿がありません</div></div>;
   return(
@@ -1011,7 +1011,7 @@ function CorkBoard({items,onItemClick,showUser=false}){
       })}
     </div>
   );
-}
+});
 
 const SEL_FIELDS="id,note,category,emoji,photo,weather,lat,lng,ai_msg,hearts,user_id,user_name,user_avatar,custom_time,posted_at";
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, startTransition, useMemo } from "react";
 
 const SUPA_URL = process.env.REACT_APP_SUPA_URL;
 const SUPA_KEY = process.env.REACT_APP_SUPA_KEY;
@@ -432,7 +432,7 @@ function SlideMenu({open,onClose,onSetTab,onOpenProfile,onSignOut,onCaptureLater
 }
 
 // 詳細モーダル: z-index 350でProfileModalより上に表示、写真大きく
-function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onViewUser,onEdit}){
+function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onViewUser,onEdit,myAvatar}){
   const already=myHearts.includes(item.id);
   const timeStr=item.custom_time?`${new Date(item.custom_time).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"})} ${roundTimeStr(new Date(item.custom_time))}`:roundTimeStr(new Date(item.posted_at));
   const wEmoji=WEATHERS.find(w=>w.value===item.weather)?.emoji;
@@ -450,10 +450,10 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
       setLoadingDeep(true);
       try{
         const prompt=`「${item.ai_msg}」という内容についてもっと詳しく教えてください。同じ${cl(item.category)}に関する話題で、この内容の続きや背景・面白いエピソードを3〜4文で深掘りしてください。友達に話すような軽いトーンで。前置き不要。`;
-        const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+        const response=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${process.env.REACT_APP_GROQ_KEY}`},body:JSON.stringify({model:"llama-3.1-8b-instant",messages:[{role:"user",content:prompt}],max_tokens:150})});
         if(!response.ok)throw new Error("API error");
         const data=await response.json();
-        const text=data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const text=data.choices?.[0]?.message?.content;
         setDeepMsg(text||getFallback(item.category));
       }catch(e){
         setDeepMsg(getFallback(item.category));
@@ -469,20 +469,20 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
         <div style={{width:40,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 18px"}}/>
         {/* ヘッダー */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:40,height:40,borderRadius:12,background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center"}}><MotifIcon motif={item.category} color={color} size={22} shadow/></div>
-            <div>
-              <div style={{fontSize:12,fontWeight:700,color:color,fontFamily:font}}>{item.user_name||cl(item.category)}</div>
+          <div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}>
+            <div style={{width:40,height:40,borderRadius:12,background:getBg(color),display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><MotifIcon motif={item.category} color={color} size={22} shadow/></div>
+            <div style={{flexShrink:0}}>
+              {(()=>{const av=isOwn?(myAvatar||item.user_avatar):item.user_avatar;return av?<img src={av} alt="" style={{width:32,height:32,borderRadius:"50%",objectFit:"cover"}} onError={e=>{e.target.style.display="none";}}/>:<div style={{width:32,height:32,borderRadius:"50%",background:"#ddd",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>👤</div>;})()}
+            </div>
+            <div style={{minWidth:0}}>
+              {item.user_name&&!isOwn
+                ?<button onClick={()=>{onClose();onViewUser(item.user_id,item.user_name);}} style={{border:"none",background:"none",cursor:"pointer",fontSize:13,fontWeight:700,color:color,fontFamily:font,padding:0,display:"block",textAlign:"left"}}>{item.user_name}</button>
+                :<div style={{fontSize:13,fontWeight:700,color:color,fontFamily:font}}>{item.user_name||cl(item.category)}</div>
+              }
               <div style={{fontSize:11,color:"#bbb",fontFamily:font}}>{timeStr}{wEmoji&&<span style={{marginLeft:5}}>{wEmoji}</span>}</div>
-              {item.user_name&&!isOwn&&(
-                <button onClick={()=>{onClose();onViewUser(item.user_id,item.user_name);}} style={{border:"none",background:"none",cursor:"pointer",fontSize:11,color:"#83b195",fontFamily:font,padding:0,marginTop:2,display:"flex",alignItems:"center",gap:4}}>
-                  {item.user_avatar?<img src={item.user_avatar} alt="" style={{width:14,height:14,borderRadius:"50%",objectFit:"cover"}}/>:<span>👤</span>}
-                  {item.user_name}
-                </button>
-              )}
             </div>
           </div>
-          <div style={{display:"flex",gap:6}}>
+          <div style={{display:"flex",gap:6,flexShrink:0}}>
             {isOwn&&<button onClick={()=>{onClose();onEdit(item);}} style={{padding:"5px 10px",borderRadius:9,border:"1px solid #ddd",background:"white",color:"#888",fontSize:12,cursor:"pointer",fontFamily:font}}>✏️ 編集</button>}
             {isOwn&&<button onClick={()=>{if(window.confirm("この投稿を削除しますか？"))onDelete(item.id);}} style={{padding:"5px 10px",borderRadius:9,border:"1px solid #fca5a5",background:"white",color:"#ef4444",fontSize:12,cursor:"pointer",fontFamily:font}}>🗑️</button>}
             <button onClick={onClose} style={{width:28,height:28,borderRadius:"50%",border:"none",background:"#e8e0d8",color:"#aaa",fontSize:14,cursor:"pointer"}}>×</button>
@@ -1069,7 +1069,7 @@ export default function App(){
             if(udata&&udata[0]){
               if(udata[0].avatar_url){setMyAvatar(udata[0].avatar_url);lsSet("myAvatar",udata[0].avatar_url);}
               if(udata[0].user_code){setMyUserCode(udata[0].user_code);lsSet("userCode",udata[0].user_code);}
-              else{const code=String(Math.floor(100000+Math.random()*900000));await supa(`users?id=eq.${user.id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({user_code:code})},at).catch(()=>{});setMyUserCode(code);lsSet("userCode",code);}
+              else{let savedCode=null;for(let i=0;i<5&&!savedCode;i++){const c=String(Math.floor(100000+Math.random()*900000));await supa(`users?id=eq.${user.id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({user_code:c})},at).then(()=>{savedCode=c;}).catch(()=>{});}if(!savedCode){const rf=await supa(`users?id=eq.${user.id}&select=user_code`,{},at).catch(()=>null);if(rf&&rf[0]?.user_code)savedCode=rf[0].user_code;}if(savedCode){setMyUserCode(savedCode);lsSet("userCode",savedCode);}}
             }
           }catch(e){console.error(e);}
           window.history.replaceState(null,"",window.location.pathname);
@@ -1097,7 +1097,7 @@ export default function App(){
       try{
         const data=await supa(`users?id=eq.${myUserId}&select=user_code`,{},tok);
         if(data&&data[0]?.user_code){setMyUserCode(data[0].user_code);lsSet("userCode",data[0].user_code);}
-        else{const code=String(Math.floor(100000+Math.random()*900000));await supa(`users?id=eq.${myUserId}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({user_code:code})},tok).catch(()=>{});setMyUserCode(code);lsSet("userCode",code);}
+        else{let savedCode=null;for(let i=0;i<5&&!savedCode;i++){const c=String(Math.floor(100000+Math.random()*900000));await supa(`users?id=eq.${myUserId}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({user_code:c})},tok).then(()=>{savedCode=c;}).catch(()=>{});}if(!savedCode){const rf=await supa(`users?id=eq.${myUserId}&select=user_code`,{},tok).catch(()=>null);if(rf&&rf[0]?.user_code)savedCode=rf[0].user_code;}if(savedCode){setMyUserCode(savedCode);lsSet("userCode",savedCode);}}
       }catch{}
     })();
   },[myUserId]);
@@ -1105,24 +1105,24 @@ export default function App(){
   async function fetchAll(){
     try{
       const since=new Date(Date.now()-7*24*3600000).toISOString();
-      const data=await supa(`discoveries?posted_at=gte.${since}&order=posted_at.desc&limit=300&select=${SEL_FIELDS}`);
-      setDiscoveries(data||[]);
+      const data=await supa(`discoveries?posted_at=gte.${since}&order=posted_at.desc&limit=100&select=${SEL_FIELDS}`);
+      startTransition(()=>setDiscoveries(data||[]));
     }catch(e){console.error(e);}
   }
   async function fetchFollowingPosts(uid){
     try{
       const follows=await supa(`follows?follower_id=eq.${uid}&select=following_id`);
       const ids=(follows||[]).map(f=>f.following_id).filter(Boolean);
-      if(!ids.length){setFollowingPosts([]);return;}
+      if(!ids.length){startTransition(()=>setFollowingPosts([]));return;}
       const since=new Date(Date.now()-7*24*3600000).toISOString();
-      const data=await supa(`discoveries?user_id=in.(${ids.join(',')})&posted_at=gte.${since}&order=posted_at.desc&limit=200&select=${SEL_FIELDS}`);
-      setFollowingPosts(data||[]);
+      const data=await supa(`discoveries?user_id=in.(${ids.join(',')})&posted_at=gte.${since}&order=posted_at.desc&limit=100&select=${SEL_FIELDS}`);
+      startTransition(()=>setFollowingPosts(data||[]));
     }catch{setFollowingPosts([]);}
   }
   async function fetchMy(uid){
     try{
-      const data=await supa(`discoveries?user_id=eq.${uid}&order=posted_at.desc&limit=500&select=${SEL_FIELDS}`);
-      setMyDiscoveries(data||[]);
+      const data=await supa(`discoveries?user_id=eq.${uid}&order=posted_at.desc&limit=200&select=${SEL_FIELDS}`);
+      startTransition(()=>setMyDiscoveries(data||[]));
     }catch(e){console.error(e);}
   }
   async function fetchWeather(){
@@ -1141,7 +1141,7 @@ export default function App(){
     return()=>{clearInterval(t1);clearInterval(t2);};
   },[authReady,myUserId]);
 
-  const nearby=discoveries.filter(d=>{if(!d.lat||!d.lng)return false;if(!userLocation)return true;return haversine(userLocation.lat,userLocation.lng,d.lat,d.lng)<=5;});
+  const nearby=useMemo(()=>discoveries.filter(d=>{if(!d.lat||!d.lng)return false;if(!userLocation)return true;return haversine(userLocation.lat,userLocation.lng,d.lat,d.lng)<=5;}),[discoveries,userLocation]);
   function toggleCat(v){const all=CATEGORIES.map(c=>c.value);setVisibleCats(prev=>{if(prev.length===all.length)return[v];if(prev.includes(v)){const next=prev.filter(x=>x!==v);return next.length===0?all:next;}return[...prev,v];});}
 
   async function handleHeart(id){
@@ -1166,7 +1166,8 @@ export default function App(){
 
   async function handleDelete(id){
     try{
-      await supa(`discoveries?id=eq.${id}`,{method:"DELETE",prefer:"return=minimal"});
+      const token=await getValidToken(sessionRef);
+      await supa(`discoveries?id=eq.${id}`,{method:"DELETE",prefer:"return=minimal"},token);
       const flt=prev=>prev.filter(d=>d.id!==id);
       setDiscoveries(flt);setFollowingPosts(flt);setMyDiscoveries(flt);
       setSelected(null);setEditTarget(null);
@@ -1177,31 +1178,30 @@ export default function App(){
     const now=Date.now();
     if(now-lastPostRef.current<10000){alert(`続けて投稿するには${Math.ceil((10000-(now-lastPostRef.current))/1000)}秒待ってください`);return;}
     lastPostRef.current=now;
-    let msg=getFallback(category);
-    try{
-      const prompt=`「${cl(category)}」に関連した面白い豆知識・雑学、またはクスっとするギャグを1〜2文で日本語で返して。友達に話すような軽いトーンで。${note&&note!=="📷"?`発見メモ:「${note}」。`:""}前置きや締めの言葉は不要。`;
-      const geminiUrl=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`;
-      const geminiBody=JSON.stringify({contents:[{parts:[{text:prompt}]}]});
-      let response;
-      for(let attempt=0;attempt<2;attempt++){
-        if(attempt>0)await new Promise(r=>setTimeout(r,3000));
-        response=await fetch(geminiUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:geminiBody});
-        if(response.status!==429)break;
-      }
-      if(!response.ok)throw new Error(`HTTP error! status: ${response.status}`);
-      const data=await response.json();
-      const aiText=data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if(aiText)msg=aiText.trim();
-    }catch(error){console.error("Gemini API Error:",error.message);}
     try{
       const token=await getValidToken(sessionRef);
       const finalPhoto=photoEdit?.croppedPhoto||photo||null;
       let photoUrl=null;if(finalPhoto)photoUrl=await uploadPhoto(finalPhoto,token);
-      const row={note:note||"📷",category,emoji,photo:photoUrl,lat:lat||null,lng:lng||null,ai_msg:msg,hearts:0,user_id:myUserId||null,user_name:myUserName||null,user_avatar:myAvatar||null,custom_time:customTime||null};
+      const fallback=getFallback(category);
+      const row={note:note||"📷",category,emoji,photo:photoUrl,lat:lat||null,lng:lng||null,ai_msg:fallback,hearts:0,user_id:myUserId||null,user_name:myUserName||null,user_avatar:myAvatar||null,custom_time:customTime||null};
       const saved=await supa("discoveries",{method:"POST",prefer:"return=representation",body:JSON.stringify(row)},token);
       const entry=Array.isArray(saved)?saved[0]:saved;
       setDiscoveries(prev=>[entry,...prev]);setMyDiscoveries(prev=>[entry,...prev]);
-      setShowCapture(false);setShowCaptureLater(false);setAiMsg(msg);setShowAI(true);
+      setShowCapture(false);setShowCaptureLater(false);setAiMsg(fallback);setShowAI(true);
+      const _m=new Date().getMonth()+1;
+      const prompt=`今は${_m}月です。「${cl(category)}」に関連した一言コメントを日本語30文字以内で返して。${_m}月らしい話題や豆知識を自然に取り入れて。友達に話すような軽いトーンで。${note&&note!=="📷"?`発見メモ:「${note}」。`:""}前置きや説明は不要。`;
+      fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${process.env.REACT_APP_GROQ_KEY}`},body:JSON.stringify({model:"llama-3.1-8b-instant",messages:[{role:"user",content:prompt}],max_tokens:40})})
+        .then(r=>r.ok?r.json():null).then(data=>{
+          const aiText=data?.choices?.[0]?.message?.content?.trim();
+          if(aiText&&entry?.id){
+            supa(`discoveries?id=eq.${entry.id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({ai_msg:aiText})},token).catch(()=>{});
+            startTransition(()=>{
+              setDiscoveries(prev=>prev.map(d=>d.id===entry.id?{...d,ai_msg:aiText}:d));
+              setMyDiscoveries(prev=>prev.map(d=>d.id===entry.id?{...d,ai_msg:aiText}:d));
+            });
+            setAiMsg(aiText);
+          }
+        }).catch(()=>{});
     }catch(e){alert("投稿失敗: "+e.message);setShowCapture(false);}
   }
 
@@ -1224,12 +1224,11 @@ export default function App(){
   if(!myUserId)return <LoginScreen/>;
 
   // タイムライン: 5km圏内 + フォローユーザーの投稿（重複排除・時系列・1週間以内）
-  const oneWeekAgo=Date.now()-7*24*3600*1000;
-  const timelineItems=[
-    ...nearby,
-    ...followingPosts.filter(d=>!nearby.find(n=>n.id===d.id)),
-  ].filter(d=>visibleCats.includes(d.category)&&new Date(d.custom_time||d.posted_at).getTime()>=oneWeekAgo).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
-  const memoryItems=myDiscoveries.filter(d=>visibleCats.includes(d.category)).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
+  const timelineItems=useMemo(()=>{
+    const ago=Date.now()-7*24*3600*1000;
+    return[...nearby,...followingPosts.filter(d=>!nearby.find(n=>n.id===d.id))].filter(d=>visibleCats.includes(d.category)&&new Date(d.custom_time||d.posted_at).getTime()>=ago).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at));
+  },[nearby,followingPosts,visibleCats]);
+  const memoryItems=useMemo(()=>myDiscoveries.filter(d=>visibleCats.includes(d.category)).sort((a,b)=>new Date(b.custom_time||b.posted_at)-new Date(a.custom_time||a.posted_at)),[myDiscoveries,visibleCats]);
   const TABS=["ホーム","タイムライン","思い出"];
 
   return(
@@ -1264,7 +1263,7 @@ export default function App(){
             {nearby.length>0&&<div style={{position:"absolute",bottom:8,left:"50%",transform:"translateX(-50%)",zIndex:1000,background:"rgba(255,252,245,0.95)",borderRadius:16,padding:"5px 14px",boxShadow:"0 2px 10px rgba(0,0,0,0.1)",fontSize:11,color:"#83b195",fontWeight:700,whiteSpace:"nowrap"}}>👥 半径5km内に{nearby.length}件</div>}
           </div>
           <div style={{flexShrink:0,background:"#f4f6f3",borderTop:"1px solid rgba(0,0,0,0.08)",display:"flex",alignItems:"center",padding:`10px 24px env(safe-area-inset-bottom,16px)`}}>
-            <button onClick={()=>setTab(1)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,border:"none",background:"none",cursor:"pointer",color:"#888"}}>
+            <button onClick={()=>startTransition(()=>setTab(1))} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,border:"none",background:"none",cursor:"pointer",color:"#888"}}>
               <span style={{fontSize:18}}>🗒️</span>
               <span style={{fontSize:10,fontWeight:500,fontFamily:font}}>タイムライン</span>
             </button>
@@ -1295,7 +1294,7 @@ export default function App(){
         </>
       )}
 
-      {selected&&<DetailModal item={selected} isOwn={myDiscoveries.some(d=>d.id===selected.id)} onClose={()=>setSelected(null)} onHeart={handleHeart} myHearts={myHearts} onUpdate={handleUpdate} onDelete={(id)=>{handleDelete(id);}} onViewUser={(id,name)=>{setSelected(null);setProfileTarget({id,name});setShowProfile(true);}} onEdit={(item)=>{setSelected(null);setEditTarget(item);}}/>}
+      {selected&&<DetailModal item={selected} isOwn={myDiscoveries.some(d=>d.id===selected.id)} onClose={()=>setSelected(null)} onHeart={handleHeart} myHearts={myHearts} onUpdate={handleUpdate} onDelete={(id)=>{handleDelete(id);}} onViewUser={(id,name)=>{setSelected(null);setProfileTarget({id,name});setShowProfile(true);}} onEdit={(item)=>{setSelected(null);setEditTarget(item);}} myAvatar={myAvatar}/>}
       {editTarget&&<PostForm initialData={editTarget} laterMode={true} userLocation={userLocation} locStatus={locStatus} onSave={handleEditSave} onClose={()=>setEditTarget(null)} onDelete={(id)=>{handleDelete(id);}} saveLabel="変更を保存 ✓" title="投稿を編集する ✏️"/>}
       {showWeatherPanel&&<WeatherPanel userLocation={userLocation} onPost={()=>{fetchWeather();setShowWeatherPanel(false);}} onClose={()=>setShowWeatherPanel(false)}/>}
       {showProfile&&<ProfileModal key={profileTarget.id||'me'} myUserId={myUserId} myUserName={myUserName} myAvatar={myAvatar} targetUserId={profileTarget.id} targetUserName={profileTarget.name} discoveries={[...discoveries,...myDiscoveries.filter(d=>!discoveries.find(x=>x.id===d.id))]} token={sessionRef.current?.access_token} onClose={()=>setShowProfile(false)} onViewUser={(id,name)=>{setProfileTarget({id,name});}} onItemClick={setSelected}/>}

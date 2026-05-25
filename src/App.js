@@ -170,50 +170,57 @@ function MoodColorPicker({color,onChange,onClose}){
     const f=n=>{const k=(n+h/30)%12;const c=l-a*Math.max(Math.min(k-3,9-k,1),-1);return Math.round(255*c).toString(16).padStart(2,'0');};
     return`#${f(0)}${f(8)}${f(4)}`;
   }
-  const init=color&&color.startsWith('#')?h2hsl(color):[210,80,55];
+  const init=color&&color.startsWith('#')?h2hsl(color):[210,80,60];
   const [hue,setHue]=useState(init[0]);
-  const [lit,setLit]=useState(Math.max(0,Math.min(100,init[2])));
-  const sat=85,sz=220,rad=sz/2-14;
-  const ix=sz/2+rad*Math.sin(hue*Math.PI/180);
-  const iy=sz/2-rad*Math.cos(hue*Math.PI/180);
-  const cur=hsl2hex(hue,sat,lit);
-  const wheelRef=useRef(null);
-  function getHue(e){
-    const rect=wheelRef.current.getBoundingClientRect();
-    const cx=rect.width/2,cy=rect.height/2;
+  const [sat,setSat]=useState(Math.max(init[1],20));
+  const [selected,setSelected]=useState(color&&color.startsWith('#')?color:null);
+  const mapRef=useRef();
+  const lightValues=[95,88,80,70,60,50,38,26,92,85,76,66,55,44,32,20,90,82,72,62,50,40,28,15];
+  const swatches=lightValues.map(l=>hsl2hex(hue,Math.max(sat,10),l));
+  const previewColor=selected||hsl2hex(hue,sat,60);
+  const markerX=(hue/360)*100;
+  const markerY=(1-sat/100)*100;
+  function handleMap(e){
+    const el=mapRef.current;if(!el)return;
+    const rect=el.getBoundingClientRect();
     const pt=e.touches?e.touches[0]:e;
-    const x=pt.clientX-rect.left-cx,y=pt.clientY-rect.top-cy;
-    return((Math.atan2(x,-y)*180/Math.PI)+360)%360;
+    const x=Math.max(0,Math.min(1,(pt.clientX-rect.left)/rect.width));
+    const y=Math.max(0,Math.min(1,(pt.clientY-rect.top)/rect.height));
+    const h=Math.round(x*360),s=Math.round((1-y)*100);
+    setHue(h);setSat(s);setSelected(null);onChange(hsl2hex(h,s,60));
   }
-  function onWheel(e){e.preventDefault();const h=Math.round(getHue(e));setHue(h);onChange(hsl2hex(h,sat,lit));}
-  const stops=Array.from({length:37},(_,i)=>`hsl(${i*10},${sat}%,${lit}%)`).join(',');
+  function selectSwatch(hex){setSelected(hex);onChange(hex);}
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:500,display:"flex",alignItems:"flex-end"}}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#f4f6f3",borderRadius:"24px 24px 0 0",padding:"24px 20px 44px",animation:"slideUp 0.3s ease"}}>
-        <div style={{width:36,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 16px"}}/>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#f4f6f3",borderRadius:"24px 24px 0 0",padding:"20px 20px 40px",animation:"slideUp 0.3s ease"}}>
+        <div style={{width:36,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 14px"}}/>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
           <div style={{fontSize:14,fontWeight:800,fontFamily:font}}>🎨 色を選ぶ</div>
           <button onClick={onClose} style={{width:26,height:26,borderRadius:"50%",border:"none",background:"#e8e0d8",color:"#aaa",fontSize:13,cursor:"pointer"}}>×</button>
         </div>
-        <div style={{display:"flex",justifyContent:"center",marginBottom:22}}>
-          <div ref={wheelRef} style={{position:"relative",width:sz,height:sz,borderRadius:"50%",background:`conic-gradient(from 0deg,${stops})`,cursor:"crosshair",touchAction:"none",userSelect:"none",boxShadow:"0 4px 20px rgba(0,0,0,0.12)"}}
-            onMouseDown={onWheel} onMouseMove={e=>e.buttons&&onWheel(e)}
-            onTouchStart={onWheel} onTouchMove={onWheel}
-          >
-            <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:66,height:66,borderRadius:"50%",background:"white",boxShadow:"0 0 0 2px rgba(0,0,0,0.06)"}}/>
-            <div style={{position:"absolute",left:ix-12,top:iy-12,width:24,height:24,borderRadius:"50%",background:cur,border:"3px solid white",boxShadow:"0 0 0 1.5px rgba(0,0,0,0.15),0 2px 8px rgba(0,0,0,0.3)",pointerEvents:"none"}}/>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:14}}>
+          <div style={{width:56,height:56,borderRadius:"50%",background:previewColor,boxShadow:`0 6px 20px ${previewColor}99`,border:"3px solid white",transition:"background 0.2s"}}/>
+        </div>
+        <div ref={mapRef}
+          onMouseDown={handleMap} onMouseMove={e=>e.buttons&&handleMap(e)}
+          onTouchStart={handleMap} onTouchMove={handleMap}
+          style={{position:"relative",width:"100%",height:130,borderRadius:14,cursor:"crosshair",touchAction:"none",overflow:"hidden",marginBottom:10,boxShadow:"0 4px 16px rgba(0,0,0,0.10)",
+            background:`linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(100,100,100,0.55) 100%),linear-gradient(to right,hsl(0,80%,60%),hsl(30,80%,60%),hsl(60,80%,60%),hsl(90,80%,60%),hsl(120,80%,60%),hsl(150,80%,60%),hsl(180,80%,60%),hsl(210,80%,60%),hsl(240,80%,60%),hsl(270,80%,60%),hsl(300,80%,60%),hsl(330,80%,60%),hsl(360,80%,60%))`}}
+        >
+          <div style={{position:"absolute",left:`${markerX}%`,top:`${markerY}%`,transform:"translate(-50%,-50%)",width:18,height:18,borderRadius:"50%",border:"3px solid white",boxShadow:"0 2px 8px rgba(0,0,0,0.3)",background:hsl2hex(hue,sat,60),pointerEvents:"none"}}/>
+          <div style={{position:"absolute",bottom:6,left:10,fontSize:10,color:"rgba(255,255,255,0.8)"}}>← 色相・彩度を選ぶ →</div>
+        </div>
+        <div style={{background:"white",borderRadius:14,padding:"10px 12px",marginBottom:14,boxShadow:"0 2px 10px rgba(0,0,0,0.06)"}}>
+          <div style={{fontSize:10,color:"#aaa",fontWeight:700,letterSpacing:1,marginBottom:8,fontFamily:font}}>明度を選ぶ</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:5}}>
+            {swatches.map((hex,i)=>(
+              <button key={i} onClick={()=>selectSwatch(hex)} style={{aspectRatio:"1",borderRadius:7,background:hex,border:selected===hex?"3px solid #333":"2px solid rgba(255,255,255,0.6)",boxShadow:selected===hex?`0 0 0 2px ${hex}`:"0 1px 3px rgba(0,0,0,0.10)",cursor:"pointer",transform:selected===hex?"scale(1.18)":"scale(1)",transition:"transform 0.12s,border 0.12s"}}/>
+            ))}
           </div>
         </div>
-        <div style={{padding:"0 4px",marginBottom:20}}>
-          <div style={{fontSize:10,color:"#aaa",fontWeight:700,letterSpacing:1,marginBottom:8,fontFamily:font}}>明度</div>
-          <div style={{position:"relative",height:22,display:"flex",alignItems:"center"}}>
-            <div style={{position:"absolute",width:"100%",height:14,borderRadius:7,background:`linear-gradient(to right,#000,hsl(${hue},${sat}%,50%),#fff)`,boxShadow:"inset 0 1px 3px rgba(0,0,0,0.15)"}}/>
-            <input type="range" min={0} max={100} value={lit} onChange={e=>{const l=Number(e.target.value);setLit(l);onChange(hsl2hex(hue,sat,l));}} style={{position:"relative",width:"100%",margin:0,cursor:"pointer",accentColor:cur,zIndex:1,background:"transparent",height:22}}/>
-          </div>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 4px"}}>
-          <div style={{width:44,height:44,borderRadius:12,background:cur,boxShadow:"0 2px 10px rgba(0,0,0,0.18)",flexShrink:0}}/>
-          <div style={{flex:1,fontSize:11,color:"#bbb",fontFamily:"monospace"}}>{cur}</div>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <div style={{width:40,height:40,borderRadius:10,background:previewColor,boxShadow:"0 2px 8px rgba(0,0,0,0.15)",flexShrink:0}}/>
+          <div style={{flex:1,fontSize:11,color:"#bbb",fontFamily:"monospace"}}>{previewColor}</div>
           <button onClick={onClose} style={{padding:"11px 22px",borderRadius:12,border:"none",background:"#83b195",color:"white",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:font}}>決定</button>
         </div>
       </div>

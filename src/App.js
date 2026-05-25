@@ -793,7 +793,8 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
             <PinEditMap lat={laterLat||35.6812} lng={laterLng||139.7671} onMove={(la,lo)=>{setLaterLat(la);setLaterLng(lo);}}/>
           </>}
         </div>}
-        <button onClick={handleSave} disabled={loading||(!note.trim()&&!photo)} style={{width:"100%",padding:"12px 0",borderRadius:12,border:"none",cursor:"pointer",background:loading?"#b8cab0":(!note.trim()&&!photo)?"#c0d4af":"#83b195",color:"white",fontSize:14,fontWeight:800,fontFamily:font,marginTop:10}}>
+        {(!note.trim()&&!photo)&&<div style={{textAlign:"center",fontSize:11,color:"#bbb",fontFamily:font,marginTop:8}}>写真かひとことを追加するとぽこれます</div>}
+        <button onClick={handleSave} disabled={loading||(!note.trim()&&!photo)} style={{width:"100%",padding:"12px 0",borderRadius:12,border:"none",cursor:"pointer",background:loading?"#b8cab0":(!note.trim()&&!photo)?"#c0d4af":"#83b195",color:"white",fontSize:14,fontWeight:800,fontFamily:font,marginTop:6}}>
           {loading?"保存中…":saveLabel}
         </button>
       </div>

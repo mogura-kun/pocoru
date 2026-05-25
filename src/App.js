@@ -803,10 +803,10 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
 }
 
 function WeatherPanel({userLocation,onPost,onClose}){
-  const [sel,setSel]=useState(null);const [photo,setPhoto]=useState(null);const [posting,setPosting]=useState(false);
+  const [sel,setSel]=useState(null);const [photo,setPhoto]=useState(null);const [note,setNote]=useState("");const [posting,setPosting]=useState(false);
   const cameraRef=useRef(null),albumRef=useRef(null);
   function handlePhoto(e){const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=ev=>setPhoto(ev.target.result);r.readAsDataURL(f);}
-  async function post(){if(!sel)return;setPosting(true);try{const lat=userLocation?.lat?jitter(userLocation.lat):null,lng=userLocation?.lng?jitter(userLocation.lng):null;let photoUrl=null;if(photo)photoUrl=await uploadPhoto(photo,null);await supa("weather_reports",{method:"POST",prefer:"return=minimal",body:JSON.stringify({weather:sel,lat,lng,photo:photoUrl})});onPost();}catch(e){alert("投稿失敗: "+e.message);}setPosting(false);}
+  async function post(){if(!sel)return;setPosting(true);try{const lat=userLocation?.lat?jitter(userLocation.lat):null,lng=userLocation?.lng?jitter(userLocation.lng):null;let photoUrl=null;if(photo)photoUrl=await uploadPhoto(photo,null);await supa("weather_reports",{method:"POST",prefer:"return=minimal",body:JSON.stringify({weather:sel,lat,lng,photo:photoUrl,note:note.trim()||null})});onPost();}catch(e){alert("投稿失敗: "+e.message);}setPosting(false);}
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.3)",zIndex:250,display:"flex",alignItems:"flex-end"}}>
       <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#f4f6f3",borderRadius:"24px 24px 0 0",padding:"20px 20px 40px",animation:"slideUp 0.3s ease"}}>
@@ -818,6 +818,7 @@ function WeatherPanel({userLocation,onPost,onClose}){
         <div style={{display:"flex",gap:7,justifyContent:"center",marginBottom:14}}>
           {WEATHERS.map(w=><button key={w.value} onClick={()=>setSel(w.value)} style={{width:42,height:42,borderRadius:12,border:"none",cursor:"pointer",fontSize:20,background:sel===w.value?"#e5ede0":"white",boxShadow:sel===w.value?"0 0 0 2.5px #83b195":"0 1px 4px rgba(0,0,0,0.1)"}}>{w.emoji}</button>)}
         </div>
+        <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="ひとこと（任意）" maxLength={100} style={{width:"100%",padding:"10px 12px",borderRadius:10,border:"1.5px solid #e0d8d0",background:"white",fontSize:13,fontFamily:font,resize:"none",height:60,boxSizing:"border-box",marginBottom:10,outline:"none"}}/>
         <div style={{marginBottom:12}}>
           {photo?<div style={{position:"relative"}}><img src={photo} alt="" style={{width:"100%",height:100,objectFit:"cover",borderRadius:10}}/><button onClick={()=>setPhoto(null)} style={{position:"absolute",top:4,right:4,width:22,height:22,borderRadius:"50%",border:"none",background:"rgba(0,0,0,0.5)",color:"white",fontSize:11,cursor:"pointer"}}>×</button></div>
             :<div style={{display:"flex",gap:7}}>

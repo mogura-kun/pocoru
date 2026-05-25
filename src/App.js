@@ -757,7 +757,10 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
             </button>
           );})}
         </div>
-        {/* 4. カメラ・アルバム（任意） */}
+        {/* 4. ひとこと */}
+        <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>ひとこと（省略可）</div>
+        <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="何を見つけた？感じた？" rows={3} style={{width:"100%",padding:"10px 12px",borderRadius:12,border:"1.5px solid #e8e0d8",background:"white",color:"#3a3028",fontSize:13,resize:"none",boxSizing:"border-box",outline:"none",fontFamily:font,lineHeight:1.6,marginBottom:11}}/>
+        {/* 5. カメラ・アルバム（任意） */}
         <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{display:"none"}}/>
         <input ref={albumRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
         <div style={{marginBottom:11}}>
@@ -790,9 +793,6 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
             <PinEditMap lat={laterLat||35.6812} lng={laterLng||139.7671} onMove={(la,lo)=>{setLaterLat(la);setLaterLng(lo);}}/>
           </>}
         </div>}
-        {/* ひとこと */}
-        <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>ひとこと（省略可）</div>
-        <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="何を見つけた？感じた？" rows={3} style={{width:"100%",padding:"10px 12px",borderRadius:12,border:"1.5px solid #e8e0d8",background:"white",color:"#3a3028",fontSize:13,resize:"none",boxSizing:"border-box",outline:"none",fontFamily:font,lineHeight:1.6}}/>
         <button onClick={handleSave} disabled={loading||(!note.trim()&&!photo)} style={{width:"100%",padding:"12px 0",borderRadius:12,border:"none",cursor:"pointer",background:loading?"#b8cab0":(!note.trim()&&!photo)?"#c0d4af":"#83b195",color:"white",fontSize:14,fontWeight:800,fontFamily:font,marginTop:10}}>
           {loading?"保存中…":saveLabel}
         </button>

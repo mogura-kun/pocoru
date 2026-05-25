@@ -728,30 +728,40 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
             <button onClick={onClose} style={{width:28,height:28,borderRadius:"50%",border:"none",background:"#e8e0d8",color:"#aaa",fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
           </div>
         </div>
+        {/* 1. 日付（後から投稿・編集のみ） */}
+        {(laterMode||isEdit)&&<div style={{marginBottom:11}}>
+          <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>📅 日時を指定</div>
+          <input type="datetime-local" value={laterTime} onChange={e=>setLaterTime(e.target.value)} style={{width:"100%",padding:"8px 11px",borderRadius:10,border:"1px solid #e8e0d8",fontSize:12,fontFamily:font,outline:"none",boxSizing:"border-box",color:"#3a3028"}}/>
+        </div>}
+        {/* 通常投稿のGPSバッジ */}
         {!laterMode&&!isEdit&&<div style={{display:"flex",alignItems:"center",gap:7,marginBottom:11,padding:"5px 10px",borderRadius:8,background:locBadge.bg}}>
           <span style={{fontSize:11,color:locBadge.color,fontWeight:700,fontFamily:font}}>📍 {locBadge.text}</span>
           {locStatus==="ok"&&userLocation&&<span style={{fontSize:10,color:"#aaa",marginLeft:"auto",fontFamily:font}}>±{Math.round(userLocation.accuracy||0)}m</span>}
         </div>}
-        {(laterMode||isEdit)&&<>
-          <div style={{marginBottom:11}}>
-            <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>📅 日時を指定</div>
-            <input type="datetime-local" value={laterTime} onChange={e=>setLaterTime(e.target.value)} style={{width:"100%",padding:"8px 11px",borderRadius:10,border:"1px solid #e8e0d8",fontSize:12,fontFamily:font,outline:"none",boxSizing:"border-box",color:"#3a3028"}}/>
-          </div>
-          <div style={{marginBottom:11}}>
-            <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:8}}>
-              <input type="checkbox" checked={noLoc} onChange={e=>setNoLoc(e.target.checked)} style={{width:16,height:16,cursor:"pointer",accentColor:"#83b195"}}/>
-              <span style={{fontSize:12,color:"#888",fontFamily:font}}>📍 場所を指定しない</span>
-            </label>
-            {!noLoc&&<>
-              <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>📍 場所を指定</div>
-              <LocationSearch onSelect={(la,lo)=>{setLaterLat(la);setLaterLng(lo);}}/>
-              <PinEditMap lat={laterLat||35.6812} lng={laterLng||139.7671} onMove={(la,lo)=>{setLaterLat(la);setLaterLng(lo);}}/>
-            </>}
-          </div>
-        </>}
+        {/* 2. 色選択 */}
+        <div style={{marginBottom:11}}>
+          <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>色を選ぶ</div>
+          <button onClick={()=>setShowMoodPicker(true)} style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1px solid #e8e0d8",background:"white",display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontFamily:font}}>
+            <div style={{width:30,height:30,borderRadius:8,background:color,flexShrink:0,boxShadow:"0 1px 4px rgba(0,0,0,0.15)"}}/>
+            <span style={{fontSize:12,color:"#888"}}>🎨 今の気分で色を選ぶ</span>
+            <div style={{marginLeft:"auto",fontSize:10,color:"#bbb",fontFamily:"monospace"}}>{color}</div>
+          </button>
+        </div>
+        {/* 3. モチーフ */}
+        <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:6,fontFamily:font}}>モチーフ</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:11}}>
+          {CATEGORIES.map(c=>{const sel=category===c.value;return(
+            <button key={c.value} onClick={()=>handleCat(c.value)} style={{padding:"10px 4px",borderRadius:12,border:"none",cursor:"pointer",background:sel?getBg(color):"white",boxShadow:sel?`0 0 0 2.5px ${color}`:"0 1px 4px rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
+              <MotifIcon motif={c.value} color={sel?"#3a3028":"#bbb"} size={24}/>
+              <span style={{fontSize:10,color:sel?"#3a3028":"#bbb",fontWeight:sel?700:400,fontFamily:font,lineHeight:1}}>{c.label}</span>
+            </button>
+          );})}
+        </div>
+        {/* 4. カメラ・アルバム（任意） */}
         <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{display:"none"}}/>
         <input ref={albumRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
         <div style={{marginBottom:11}}>
+          <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>写真（任意）</div>
           {photo
             ?<div style={{position:"relative",display:"flex",justifyContent:"center"}}>
                 <div style={{background:"white",padding:"7px 7px 24px",boxShadow:"0 3px 12px rgba(0,0,0,0.10)",borderRadius:2}}>
@@ -768,25 +778,21 @@ function PostForm({initialData={}, laterMode=false, userLocation, locStatus, onS
             </div>
           }
         </div>
-        <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:6,fontFamily:font}}>モチーフ</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:10}}>
-          {CATEGORIES.map(c=>{const sel=category===c.value;const col=sel?color:c.defaultColor;return(
-            <button key={c.value} onClick={()=>handleCat(c.value)} style={{padding:"10px 4px",borderRadius:12,border:"none",cursor:"pointer",background:sel?getBg(color):"white",boxShadow:sel?`0 0 0 2.5px ${color}`:"0 1px 4px rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
-              <MotifIcon motif={c.value} color={sel?"#3a3028":"#bbb"} size={24}/>
-              <span style={{fontSize:10,color:sel?"#3a3028":"#bbb",fontWeight:sel?700:400,fontFamily:font,lineHeight:1}}>{c.label}</span>
-            </button>
-          );})}
-        </div>
-        <div style={{marginBottom:11}}>
-          <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>モチーフカラー</div>
-          <button onClick={()=>setShowMoodPicker(true)} style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1px solid #e8e0d8",background:"white",display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontFamily:font}}>
-            <div style={{width:30,height:30,borderRadius:8,background:color,flexShrink:0,boxShadow:"0 1px 4px rgba(0,0,0,0.15)"}}/>
-            <span style={{fontSize:12,color:"#888"}}>🎨 今の気分で色を選ぶ</span>
-            <div style={{marginLeft:"auto",fontSize:10,color:"#bbb",fontFamily:"monospace"}}>{color}</div>
-          </button>
-        </div>
-        <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>ひとこと（写真のみでもOK）</div>
-        <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="何を見つけた？感じた？（省略可）" rows={3} style={{width:"100%",padding:"10px 12px",borderRadius:12,border:"1.5px solid #e8e0d8",background:"white",color:"#3a3028",fontSize:13,resize:"none",boxSizing:"border-box",outline:"none",fontFamily:font,lineHeight:1.6}}/>
+        {/* 5. 地図（後から投稿・編集のみ） */}
+        {(laterMode||isEdit)&&<div style={{marginBottom:11}}>
+          <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:8}}>
+            <input type="checkbox" checked={noLoc} onChange={e=>setNoLoc(e.target.checked)} style={{width:16,height:16,cursor:"pointer",accentColor:"#83b195"}}/>
+            <span style={{fontSize:12,color:"#888",fontFamily:font}}>📍 場所を指定しない</span>
+          </label>
+          {!noLoc&&<>
+            <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>📍 場所を指定</div>
+            <LocationSearch onSelect={(la,lo)=>{setLaterLat(la);setLaterLng(lo);}}/>
+            <PinEditMap lat={laterLat||35.6812} lng={laterLng||139.7671} onMove={(la,lo)=>{setLaterLat(la);setLaterLng(lo);}}/>
+          </>}
+        </div>}
+        {/* ひとこと */}
+        <div style={{fontSize:10,color:"#bbb",fontWeight:700,letterSpacing:1,marginBottom:5,fontFamily:font}}>ひとこと（省略可）</div>
+        <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="何を見つけた？感じた？" rows={3} style={{width:"100%",padding:"10px 12px",borderRadius:12,border:"1.5px solid #e8e0d8",background:"white",color:"#3a3028",fontSize:13,resize:"none",boxSizing:"border-box",outline:"none",fontFamily:font,lineHeight:1.6}}/>
         <button onClick={handleSave} disabled={loading||(!note.trim()&&!photo)} style={{width:"100%",padding:"12px 0",borderRadius:12,border:"none",cursor:"pointer",background:loading?"#b8cab0":(!note.trim()&&!photo)?"#c0d4af":"#83b195",color:"white",fontSize:14,fontWeight:800,fontFamily:font,marginTop:10}}>
           {loading?"保存中…":saveLabel}
         </button>

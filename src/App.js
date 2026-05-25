@@ -117,13 +117,13 @@ const WEATHERS=[
   {value:"snowy",emoji:"❄️"},{value:"windy",emoji:"🌬️"},{value:"rainbow",emoji:"🌈"},
 ];
 const MOOD_COLORS=[
-  {mood:"🌸 やさしい", colors:["#ffb3c1","#ffc8dd","#d4848a","#ff6b9d","#c9184a"]},
-  {mood:"☀️ 明るい",   colors:["#ffdd57","#ffd166","#f5b942","#ff9f1c","#f48c06"]},
-  {mood:"🌿 自然",     colors:["#83b195","#52b788","#40916c","#3ab8a0","#74c69d"]},
-  {mood:"🌊 爽やか",   colors:["#4a9cc7","#48cae4","#0096c7","#7ab0d4","#00b4d8"]},
-  {mood:"🌙 落ち着く", colors:["#8b7cc8","#9b72cc","#6930c3","#5e60ce","#4361ee"]},
-  {mood:"🔥 元気",     colors:["#e63946","#e07840","#f4a261","#ff6b35","#ff9f1c"]},
-  {mood:"🤍 シンプル", colors:["#f5f5f5","#cccccc","#888888","#444444","#111111"]},
+  {mood:"🌸 やさしい", colors:["#ffc2d0","#ffd7ec","#e39399","#ff7aac","#e23163"]},
+  {mood:"☀️ 明るい",   colors:["#ffec66","#ffe075","#ffc851","#ffae2b","#ffa01a"]},
+  {mood:"🌿 自然",     colors:["#92c0a4","#61c697","#54a580","#49c7af","#83d5ac"]},
+  {mood:"🌊 爽やか",   colors:["#59abd6","#57d9f3","#14aadb","#89bfe3","#14c8ec"]},
+  {mood:"🌙 落ち着く", colors:["#9a8bd7","#aa81db","#7d44d7","#7274e2","#5775ff"]},
+  {mood:"🔥 元気",     colors:["#f54855","#ef874f","#ffb170","#ff7a44","#ffae2b"]},
+  {mood:"🤍 シンプル", colors:["#f8f8f8","#dbdbdb","#979797","#585858","#252525"]},
 ];
 
 function haversine(la1,lo1,la2,lo2){const d=v=>v*Math.PI/180;const a=Math.sin(d(la2-la1)/2)**2+Math.cos(d(la1))*Math.cos(d(la2))*Math.sin(d(lo2-lo1)/2)**2;return 6371*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}

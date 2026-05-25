@@ -158,7 +158,7 @@ function StickyNote({text,colorKey="yellow",rotate=0}){
   );
 }
 
-function MoodColorPicker({color,onChange,onClose}){
+function MoodColorPicker({color,onChange,onClose,onConfirm,description}){
   function h2hsl(hex){
     const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
     const max=Math.max(r,g,b),min=Math.min(r,g,b);let h,s,l=(max+min)/2;
@@ -190,14 +190,16 @@ function MoodColorPicker({color,onChange,onClose}){
     setHue(h);setSat(s);setSelected(null);onChange(hsl2hex(h,s,60));
   }
   function selectSwatch(hex){setSelected(hex);onChange(hex);}
+  const handleConfirm=onConfirm||onClose;
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:500,display:"flex",alignItems:"flex-end"}}>
       <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:430,margin:"0 auto",background:"#f4f6f3",borderRadius:"24px 24px 0 0",padding:"20px 20px 40px",animation:"slideUp 0.3s ease"}}>
         <div style={{width:36,height:4,background:"#e0d8d0",borderRadius:2,margin:"0 auto 14px"}}/>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:description?8:14}}>
           <div style={{fontSize:14,fontWeight:800,fontFamily:font}}>🎨 色を選ぶ</div>
           <button onClick={onClose} style={{width:26,height:26,borderRadius:"50%",border:"none",background:"#e8e0d8",color:"#aaa",fontSize:13,cursor:"pointer"}}>×</button>
         </div>
+        {description&&<div style={{textAlign:"center",fontSize:13,color:"#83b195",fontWeight:700,fontFamily:font,marginBottom:14,letterSpacing:0.3}}>{description}</div>}
         <div style={{display:"flex",justifyContent:"center",marginBottom:14}}>
           <div style={{width:56,height:56,borderRadius:"50%",background:previewColor,boxShadow:`0 6px 20px ${previewColor}99`,border:"3px solid white",transition:"background 0.2s"}}/>
         </div>
@@ -221,7 +223,7 @@ function MoodColorPicker({color,onChange,onClose}){
         <div style={{display:"flex",alignItems:"center",gap:12}}>
           <div style={{width:40,height:40,borderRadius:10,background:previewColor,boxShadow:"0 2px 8px rgba(0,0,0,0.15)",flexShrink:0}}/>
           <div style={{flex:1,fontSize:11,color:"#bbb",fontFamily:"monospace"}}>{previewColor}</div>
-          <button onClick={onClose} style={{padding:"11px 22px",borderRadius:12,border:"none",background:"#83b195",color:"white",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:font}}>決定</button>
+          <button onClick={handleConfirm} style={{padding:"11px 22px",borderRadius:12,border:"none",background:"#83b195",color:"white",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:font}}>{onConfirm?"この色で投稿する":"決定"}</button>
         </div>
       </div>
     </div>
@@ -1066,6 +1068,8 @@ export default function App(){
   const [showCapture,setShowCapture]=useState(false);
   const [showCaptureLater,setShowCaptureLater]=useState(false);
   const [initialPhoto,setInitialPhoto]=useState(null);
+  const [showMoodEntry,setShowMoodEntry]=useState(false);
+  const [moodEntryColor,setMoodEntryColor]=useState("#83b195");
   const globalCameraRef=useRef(null);
   const [showWeatherPanel,setShowWeatherPanel]=useState(false);
   const [showProfile,setShowProfile]=useState(false);
@@ -1317,7 +1321,7 @@ export default function App(){
               <span style={{fontSize:18}}>🗒️</span>
               <span style={{fontSize:10,fontWeight:500,fontFamily:font}}>タイムライン</span>
             </button>
-            <button onClick={()=>globalCameraRef.current?.click()} style={{width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"#83b195",color:"white",boxShadow:"0 4px 16px rgba(131,177,149,0.45)",display:"flex",alignItems:"center",justifyContent:"center",marginLeft:"auto"}}><svg width="26" height="26" viewBox="0 0 512 512" fill="white"><path d="M495.469,241.969c-113.594,0-152.875-28.5-174.906-50.531c-22.031-22.125-50.578-61.344-50.578-174.922c0-4.328-0.453-16.516-14.016-16.516C242.531,0,242,12.188,242,16.516c0,113.578-28.563,152.797-50.594,174.922c-22.094,22.031-61.375,50.531-174.906,50.531c-4.344,0-16.5,0.5-16.5,14.047c0,13.453,12.156,13.938,16.5,13.938c113.531,0,152.813,28.578,174.906,50.625C213.438,342.625,242,381.922,242,495.5c0,4.344,0.531,16.5,13.969,16.5c13.563,0,14.016-12.156,14.016-16.5c0-113.578,28.547-152.875,50.578-174.922c22.031-22.078,61.313-50.625,174.906-50.625c4.328,0,16.531-0.422,16.531-13.984C512,242.516,499.797,241.969,495.469,241.969z"/></svg></button>
+            <button onClick={()=>setShowMoodEntry(true)} style={{width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"#83b195",color:"white",boxShadow:"0 4px 16px rgba(131,177,149,0.45)",display:"flex",alignItems:"center",justifyContent:"center",marginLeft:"auto"}}><svg width="26" height="26" viewBox="0 0 512 512" fill="white"><path d="M495.469,241.969c-113.594,0-152.875-28.5-174.906-50.531c-22.031-22.125-50.578-61.344-50.578-174.922c0-4.328-0.453-16.516-14.016-16.516C242.531,0,242,12.188,242,16.516c0,113.578-28.563,152.797-50.594,174.922c-22.094,22.031-61.375,50.531-174.906,50.531c-4.344,0-16.5,0.5-16.5,14.047c0,13.453,12.156,13.938,16.5,13.938c113.531,0,152.813,28.578,174.906,50.625C213.438,342.625,242,381.922,242,495.5c0,4.344,0.531,16.5,13.969,16.5c13.563,0,14.016-12.156,14.016-16.5c0-113.578,28.547-152.875,50.578-174.922c22.031-22.078,61.313-50.625,174.906-50.625c4.328,0,16.531-0.422,16.531-13.984C512,242.516,499.797,241.969,495.469,241.969z"/></svg></button>
           </div>
         </div>
 
@@ -1346,7 +1350,7 @@ export default function App(){
             {tab===2&&<div style={{background:"#99d0bc",minHeight:"100%",padding:"10px 8px 80px"}}><CorkBoard items={memoryItems} onItemClick={setSelected} showUser={false}/></div>}
           </div>
           {!showCapture&&!showAI&&!selected&&!showWeatherPanel&&!showProfile&&!editTarget&&(
-            <button onClick={()=>globalCameraRef.current?.click()} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px) + 22px)",right:18,width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"#83b195",color:"white",boxShadow:"0 4px 16px rgba(131,177,149,0.45)",zIndex:50,display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="26" height="26" viewBox="0 0 512 512" fill="white"><path d="M495.469,241.969c-113.594,0-152.875-28.5-174.906-50.531c-22.031-22.125-50.578-61.344-50.578-174.922c0-4.328-0.453-16.516-14.016-16.516C242.531,0,242,12.188,242,16.516c0,113.578-28.563,152.797-50.594,174.922c-22.094,22.031-61.375,50.531-174.906,50.531c-4.344,0-16.5,0.5-16.5,14.047c0,13.453,12.156,13.938,16.5,13.938c113.531,0,152.813,28.578,174.906,50.625C213.438,342.625,242,381.922,242,495.5c0,4.344,0.531,16.5,13.969,16.5c13.563,0,14.016-12.156,14.016-16.5c0-113.578,28.547-152.875,50.578-174.922c22.031-22.078,61.313-50.625,174.906-50.625c4.328,0,16.531-0.422,16.531-13.984C512,242.516,499.797,241.969,495.469,241.969z"/></svg></button>
+            <button onClick={()=>setShowMoodEntry(true)} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px) + 22px)",right:18,width:52,height:52,borderRadius:"50%",border:"none",cursor:"pointer",background:"#83b195",color:"white",boxShadow:"0 4px 16px rgba(131,177,149,0.45)",zIndex:50,display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="26" height="26" viewBox="0 0 512 512" fill="white"><path d="M495.469,241.969c-113.594,0-152.875-28.5-174.906-50.531c-22.031-22.125-50.578-61.344-50.578-174.922c0-4.328-0.453-16.516-14.016-16.516C242.531,0,242,12.188,242,16.516c0,113.578-28.563,152.797-50.594,174.922c-22.094,22.031-61.375,50.531-174.906,50.531c-4.344,0-16.5,0.5-16.5,14.047c0,13.453,12.156,13.938,16.5,13.938c113.531,0,152.813,28.578,174.906,50.625C213.438,342.625,242,381.922,242,495.5c0,4.344,0.531,16.5,13.969,16.5c13.563,0,14.016-12.156,14.016-16.5c0-113.578,28.547-152.875,50.578-174.922c22.031-22.078,61.313-50.625,174.906-50.625c4.328,0,16.531-0.422,16.531-13.984C512,242.516,499.797,241.969,495.469,241.969z"/></svg></button>
           )}
         </>
       )}
@@ -1366,7 +1370,8 @@ export default function App(){
         </div>
       )}
       <input ref={globalCameraRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=ev=>{setInitialPhoto(ev.target.result);setShowCapture(true);};r.readAsDataURL(f);e.target.value="";}}/>
-      {showCapture&&<PostForm initialData={initialPhoto?{photo:initialPhoto}:{}} userLocation={userLocation} locStatus={locStatus} onSave={handleSave} onClose={()=>{setShowCapture(false);setInitialPhoto(null);}}/>}
+      {showMoodEntry&&<MoodColorPicker color={moodEntryColor} onChange={setMoodEntryColor} onClose={()=>setShowMoodEntry(false)} onConfirm={()=>{setShowMoodEntry(false);setShowCapture(true);}} description="今の気持ちを色にしてみよう 🎨"/>}
+      {showCapture&&<PostForm initialData={{...(initialPhoto?{photo:initialPhoto}:{}),emoji:moodEntryColor}} userLocation={userLocation} locStatus={locStatus} onSave={handleSave} onClose={()=>{setShowCapture(false);setInitialPhoto(null);setMoodEntryColor("#83b195");}}/>}
       {showCaptureLater&&<PostForm laterMode userLocation={userLocation} locStatus={locStatus} onSave={handleSave} onClose={()=>setShowCaptureLater(false)} title="後から投稿する 🕐"/>}
       <style>{`@keyframes slideUp{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes auraExpand{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:0.3}}.leaflet-container{font-family:${font}!important}.leaflet-control-attribution{font-size:9px!important}.leaflet-top,.leaflet-bottom{z-index:400!important}.leaflet-pane{z-index:300!important}`}</style>
     </div>

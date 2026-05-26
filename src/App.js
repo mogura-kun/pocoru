@@ -54,7 +54,15 @@ async function getValidToken(sessionRef){
   }
   return sess.access_token;
 }
-function googleLogin(){window.location.href=`${AUTH_URL}/authorize?provider=google&redirect_to=${encodeURIComponent(APP_URL)}`;}
+function googleLogin(){
+  const oauthUrl=`${AUTH_URL}/authorize?provider=google&redirect_to=${encodeURIComponent(APP_URL)}`;
+  if(/Android/.test(navigator.userAgent||"")&&isInAppBrowser()){
+    // Android in-app browser: Chrome を intent URI で直接起動
+    window.location.href=`intent://${oauthUrl.replace(/^https?:\/\//,"")}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(oauthUrl)};end`;
+    return;
+  }
+  window.location.href=oauthUrl;
+}
 async function googleLogout(token){try{await fetch(`${AUTH_URL}/logout`,{method:"POST",headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${token}`}});}catch{}saveSession(null);}
 
 function useLeaflet(cb){
@@ -1016,14 +1024,16 @@ function InAppWarning(){
   );
 }
 function LoginScreen(){
+  const ua=navigator.userAgent||"";
   const inApp=isInAppBrowser();
+  const iosInApp=inApp&&/iPhone|iPad|iPod/.test(ua);
   const [showHelp,setShowHelp]=useState(false);
   return(
     <div style={{minHeight:"100dvh",background:"#f4f6f3",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:font,padding:32}}>
       <div style={{fontSize:52,marginBottom:16}}>🌱</div>
       <h1 style={{fontSize:22,fontWeight:800,color:"#3a3028",margin:"0 0 8px",textAlign:"center"}}>今日の小さな発見</h1>
       <p style={{fontSize:13,color:"#aaa",margin:"0 0 44px",textAlign:"center",lineHeight:1.8}}>あなたの街の小さな発見を<br/>半径5kmの誰かと共有しよう</p>
-      {inApp||showHelp?(
+      {iosInApp||showHelp?(
         <InAppWarning/>
       ):(
         <>

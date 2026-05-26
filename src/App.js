@@ -64,6 +64,17 @@ function googleLogin(){
   window.location.href=oauthUrl;
 }
 async function googleLogout(token){try{await fetch(`${AUTH_URL}/logout`,{method:"POST",headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${token}`}});}catch{}saveSession(null);}
+async function geminiGenerate(prompt,maxTokens=60,retry=2){
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`;
+  for(let i=0;i<=retry;i++){
+    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:maxTokens}})});
+    if(res.status===429){if(i<retry){await new Promise(r=>setTimeout(r,3000*(i+1)));continue;}return null;}
+    if(!res.ok)return null;
+    const data=await res.json();
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||null;
+  }
+  return null;
+}
 
 function useLeaflet(cb){
   useEffect(()=>{
@@ -467,10 +478,7 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
       setLoadingDeep(true);
       try{
         const prompt=`「${item.ai_msg}」という内容についてもっと詳しく教えてください。同じ${cl(item.category)}に関する話題で、この内容の続きや背景・面白いエピソードを3〜4文で深掘りしてください。友達に話すような軽いトーンで。前置き不要。`;
-        const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:200}})});
-        if(!response.ok)throw new Error("API error");
-        const data=await response.json();
-        const text=data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const text=await geminiGenerate(prompt,200);
         setDeepMsg(text||getFallback(item.category));
       }catch(e){
         setDeepMsg(getFallback(item.category));
@@ -1271,9 +1279,7 @@ export default function App(){
       setShowCapture(false);setShowCaptureLater(false);setAiMsg(fallback);setShowAI(true);
       const _m=new Date().getMonth()+1;
       const prompt=`今は${_m}月です。「${cl(category)}」に関連した一言コメントを日本語30文字以内で返して。${_m}月らしい話題や豆知識を自然に取り入れて。友達に話すような軽いトーンで。${note&&note!=="📷"?`発見メモ:「${note}」。`:""}前置きや説明は不要。`;
-      fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:60}})})
-        .then(r=>r.ok?r.json():null).then(data=>{
-          const aiText=data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      geminiGenerate(prompt,60).then(aiText=>{
           if(aiText&&entry?.id){
             supa(`discoveries?id=eq.${entry.id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({ai_msg:aiText})},token).catch(()=>{});
             setDiscoveries(prev=>prev.map(d=>d.id===entry.id?{...d,ai_msg:aiText}:d));

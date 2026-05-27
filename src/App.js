@@ -72,7 +72,7 @@ async function geminiGenerate(prompt,maxTokens=60,retry=3){
       for(let i=0;i<=retry;i++){
         try{
           const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:maxTokens}})});
-          if(res.status===429){if(i<retry){await new Promise(r=>setTimeout(r,10000*(i+1)));continue;}resolve(null);return;}
+          if(res.status===429){const errBody=await res.text();console.error("Gemini 429 detail:",errBody);if(i<retry){await new Promise(r=>setTimeout(r,10000*(i+1)));continue;}resolve(null);return;}
           if(!res.ok){resolve(null);return;}
           const data=await res.json();
           resolve(data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||null);

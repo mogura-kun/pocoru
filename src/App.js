@@ -68,7 +68,7 @@ let _geminiQueue=Promise.resolve();
 async function geminiGenerate(prompt,maxTokens=60,retry=3){
   return new Promise(resolve=>{
     _geminiQueue=_geminiQueue.then(async()=>{
-      const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`;
+      const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`;
       for(let i=0;i<=retry;i++){
         try{
           const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:maxTokens}})});

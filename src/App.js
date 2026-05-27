@@ -64,20 +64,24 @@ function googleLogin(){
   window.location.href=oauthUrl;
 }
 async function googleLogout(token){try{await fetch(`${AUTH_URL}/logout`,{method:"POST",headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${token}`}});}catch{}saveSession(null);}
-let _geminiLastCall=0;
+let _geminiQueue=Promise.resolve();
 async function geminiGenerate(prompt,maxTokens=60,retry=3){
-  const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`;
-  for(let i=0;i<=retry;i++){
-    const wait=Math.max(0,_geminiLastCall+2100-Date.now());
-    if(wait>0)await new Promise(r=>setTimeout(r,wait));
-    _geminiLastCall=Date.now();
-    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:maxTokens}})});
-    if(res.status===429){if(i<retry){await new Promise(r=>setTimeout(r,6000*(i+1)));continue;}return null;}
-    if(!res.ok)return null;
-    const data=await res.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||null;
-  }
-  return null;
+  return new Promise(resolve=>{
+    _geminiQueue=_geminiQueue.then(async()=>{
+      const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`;
+      for(let i=0;i<=retry;i++){
+        try{
+          const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:maxTokens}})});
+          if(res.status===429){if(i<retry){await new Promise(r=>setTimeout(r,10000*(i+1)));continue;}resolve(null);return;}
+          if(!res.ok){resolve(null);return;}
+          const data=await res.json();
+          resolve(data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||null);
+          return;
+        }catch{resolve(null);return;}
+      }
+      resolve(null);
+    }).then(()=>new Promise(r=>setTimeout(r,2200)));
+  });
 }
 
 function useLeaflet(cb){

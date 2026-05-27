@@ -534,9 +534,12 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
         {item.ai_msg&&(
           <div style={{position:"relative",marginBottom:24,cursor:flipped?"default":"pointer"}}
             onClick={()=>{if(!flipped)handleFlip();}}>
-            {/* 下の付箋（深掘り内容） */}
+            {/* 下の付箋（深掘り内容）：フリップ後はrelativeに切り替えて全文表示 */}
             <div style={{
-              position:"absolute",top:8,left:4,right:-4,
+              position:flipped?"relative":"absolute",
+              top:flipped?undefined:8,
+              marginTop:flipped?8:undefined,
+              left:4,right:-4,
               background:"#bae6fd",
               borderRadius:4,padding:"16px 14px 12px",minHeight:80,
               boxShadow:"2px 3px 8px rgba(0,0,0,0.09)",
@@ -554,9 +557,11 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
                 </button>
               )}
             </div>
-            {/* 上の付箋（AIコメント・めくれて消える） */}
+            {/* 上の付箋（AIコメント・めくれて消える）：フリップ後はabsoluteに切り替え */}
             <div style={{
-              position:"relative",zIndex:2,
+              position:flipped?"absolute":"relative",
+              top:flipped?0:undefined,left:flipped?0:undefined,right:flipped?0:undefined,
+              zIndex:2,
               background:stickyBg,
               padding:"16px 14px 12px",
               boxShadow:"2px 3px 6px rgba(0,0,0,0.09)",

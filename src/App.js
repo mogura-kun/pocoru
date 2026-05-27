@@ -65,7 +65,7 @@ function googleLogin(){
 }
 async function googleLogout(token){try{await fetch(`${AUTH_URL}/logout`,{method:"POST",headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${token}`}});}catch{}saveSession(null);}
 async function geminiGenerate(prompt,maxTokens=60,retry=2){
-  const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`;
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`;
   for(let i=0;i<=retry;i++){
     const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:maxTokens}})});
     if(res.status===429){if(i<retry){await new Promise(r=>setTimeout(r,3000*(i+1)));continue;}return null;}

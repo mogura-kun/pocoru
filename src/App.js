@@ -175,8 +175,8 @@ function Polaroid({photo,emoji,category,rotate=0,small=false,note="",userName=""
     </div>
   );
 }
-function CanvasArt({color,id}){
-  const W=155,H=140;
+function CanvasArt({color,id,w=155,h=140}){
+  const W=w,H=h;
   const fid=`ca${String(id||"x").replace(/[^a-z0-9]/gi,"").slice(0,16)}`;
   function x2h(hex){const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0,s=0,l=(mx+mn)/2;if(d){s=l>0.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}h/=6;}return[h*360,s*100,l*100];}
   function h2x(h,s,l){s/=100;l/=100;const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12,c=l-a*Math.max(Math.min(k-3,9-k,1),-1);return Math.round(255*c).toString(16).padStart(2,"0");};return`#${f(0)}${f(8)}${f(4)}`;}
@@ -567,9 +567,15 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
             <button onClick={onClose} style={{width:28,height:28,borderRadius:"50%",border:"none",background:"#e8e0d8",color:"#aaa",fontSize:14,cursor:"pointer"}}>×</button>
           </div>
         </div>
-        {/* ポラロイド */}
+        {/* 写真またはアート（大サイズ） */}
         <div style={{display:"flex",justifyContent:"center",marginBottom:16}}>
-          <Polaroid photo={item.photo} emoji={item.emoji} category={item.category} note={item.note} rotate={itemRot(item.id)}/>
+          {item.photo
+            ?<div style={{background:"white",padding:"14px 14px 40px",boxShadow:"0 3px 16px rgba(0,0,0,0.12)",borderRadius:2}}>
+               <img src={item.photo} alt="" style={{width:270,height:210,objectFit:"cover",display:"block"}}/>
+               {item.note&&item.note!=="📷"&&<div style={{fontSize:10,color:"#888",fontFamily:font,width:270,paddingTop:6,lineHeight:1.5}}>{item.note}</div>}
+             </div>
+            :<CanvasArt color={getColor(item)} id={item.id} w={270} h={210}/>
+          }
         </div>
         {/* 付箋（めくり切り替え） */}
         {item.ai_msg&&(

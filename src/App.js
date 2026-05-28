@@ -175,6 +175,38 @@ function Polaroid({photo,emoji,category,rotate=0,small=false,note="",userName=""
     </div>
   );
 }
+function CanvasArt({color,id}){
+  const W=155,H=140;
+  const base=color||"#83b195";
+  const fid=`ca${String(id||"x").replace(/[^a-z0-9]/gi,"").slice(0,12)}`;
+  function x2h(hex){const r=parseInt((hex).slice(1,3),16)/255,g=parseInt((hex).slice(3,5),16)/255,b=parseInt((hex).slice(5,7),16)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0,s=0,l=(mx+mn)/2;if(d){s=l>0.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}h/=6;}return[h*360,s*100,l*100];}
+  function h2x(h,s,l){s/=100;l/=100;const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12,c=l-a*Math.max(Math.min(k-3,9-k,1),-1);return Math.round(255*c).toString(16).padStart(2,"0");};return`#${f(0)}${f(8)}${f(4)}`;}
+  const [h,s,l]=x2h(base);
+  const pal=[h2x(h,Math.min(s*1.2,100),Math.max(l-22,8)),base,h2x(h,Math.max(s*0.7,5),Math.min(l+22,88)),h2x((h+28)%360,s*0.9,l),h2x(h,Math.max(s-28,0),Math.min(l+38,95))];
+  const idh=String(id||"").split("").reduce((a,c)=>((a<<5)-a+c.charCodeAt(0))|0,0);
+  let _rs=(Math.abs(idh)||1)*1664525+1013904223>>>0;
+  const rng=()=>{_rs=(_rs*1664525+1013904223)>>>0;return _rs/4294967296;};
+  function blob(cx,cy,r){const n=7,pts=[];for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2,d=r*(0.45+rng()*0.9);pts.push([cx+Math.cos(a)*d,cy+Math.sin(a)*d]);}const f=v=>v.toFixed(1);let d=`M${f(pts[0][0])},${f(pts[0][1])}`;for(let i=0;i<n;i++){const p=pts[(i-1+n)%n],c=pts[i],ne=pts[(i+1)%n],n2=pts[(i+2)%n];const c1x=c[0]+(ne[0]-p[0])/6,c1y=c[1]+(ne[1]-p[1])/6,c2x=ne[0]-(n2[0]-c[0])/6,c2y=ne[1]-(n2[1]-c[1])/6;d+=`C${f(c1x)},${f(c1y)},${f(c2x)},${f(c2y)},${f(ne[0])},${f(ne[1])}`;}return d+"Z";}
+  const blobs=pal.map(c=>({d:blob(W*(0.12+rng()*0.76),H*(0.1+rng()*0.8),W*(0.2+rng()*0.32)),fill:c,op:0.7+rng()*0.25}));
+  const bg=h2x(h,Math.max(s-30,0),Math.min(l+38,96));
+  return(
+    <div style={{display:"inline-block",background:"#f5f0e8",padding:"8px",position:"relative",boxShadow:"5px 5px 0 #b8a07a,3px 3px 0 #cdb48a",borderRadius:1}}>
+      <svg width={W} height={H} style={{display:"block"}}>
+        <defs>
+          <filter id={fid} x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" result="n"/>
+            <feColorMatrix type="saturate" values="0" in="n" result="gn"/>
+            <feBlend in="SourceGraphic" in2="gn" mode="overlay"/>
+          </filter>
+        </defs>
+        <rect width={W} height={H} fill={bg}/>
+        {blobs.map((b,i)=><path key={i} d={b.d} fill={b.fill} opacity={b.op}/>)}
+        <rect width={W} height={H} fill={base} opacity={0.05} filter={`url(#${fid})`}/>
+        <rect width={W} height={H} fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth={10}/>
+      </svg>
+    </div>
+  );
+}
 function StickyNote({text,colorKey="yellow",rotate=0}){
   const C={yellow:"#fef08a",pink:"#fda4af",blue:"#bae6fd",green:"#bbf7d0",orange:"#fed7aa"};
   return(
@@ -980,7 +1012,7 @@ function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,
                     <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
                   </div>
                   <div style={{transform:`rotate(${rot}deg)`,transformOrigin:"top center",filter:"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))"}}>
-                    <Polaroid photo={d.photo} emoji={d.emoji} category={d.category} note={d.note}/>
+                    {d.photo?<Polaroid photo={d.photo} emoji={d.emoji} category={d.category} note={d.note}/>:<CanvasArt color={getColor(d)} id={d.id}/>}
                   </div>
                   {d.ai_msg&&<div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}><StickyNote text={d.ai_msg} colorKey={stickyColors[i%stickyColors.length]}/></div>}
                 </div>
@@ -1055,7 +1087,7 @@ const CorkBoard=memo(function CorkBoard({items,onItemClick,showUser=false}){
               <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
             </div>
             <div style={{transform:`rotate(${rot}deg)`,transformOrigin:"top center",filter:"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))"}}>
-              <Polaroid photo={d.photo} emoji={d.emoji} category={d.category} note={d.note} userName={showUser?d.user_name:""}/>
+              {d.photo?<Polaroid photo={d.photo} emoji={d.emoji} category={d.category} note={d.note} userName={showUser?d.user_name:""}/>:<CanvasArt color={getColor(d)} id={d.id}/>}
             </div>
             {d.ai_msg&&<div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}><StickyNote text={d.ai_msg} colorKey={stickyColors[i%stickyColors.length]}/></div>}
           </div>

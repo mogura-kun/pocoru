@@ -517,8 +517,8 @@ function DetailModal({item,isOwn,onClose,onHeart,myHearts,onUpdate,onDelete,onVi
     if(!deepMsg&&!loadingDeep){
       setLoadingDeep(true);
       try{
-        const prompt=`「${item.ai_msg}」という内容についてもっと詳しく教えてください。同じ${cl(item.category)}に関する話題で、この内容の続きや背景・面白いエピソードを3〜4文で深掘りしてください。友達に話すような軽いトーンで。前置き不要。`;
-        const text=await geminiGenerate(prompt,2000);
+        const prompt=`「${item.ai_msg}」の話題を深掘りして。同じ${cl(item.category)}に関する続き・背景・面白いエピソードを3文・120文字以内で返して。友達に話すような軽いトーンで。絶対に3文以内・120文字以内。前置き不要。`;
+        const text=await geminiGenerate(prompt,600);
         setDeepMsg(text||getFallback(item.category));
       }catch(e){
         setDeepMsg(getFallback(item.category));
@@ -1295,7 +1295,7 @@ export default function App(){
       setDiscoveries(prev=>[entry,...prev]);setMyDiscoveries(prev=>[entry,...prev]);
       setShowCapture(false);setShowCaptureLater(false);setAiMsg(fallback);setShowAI(true);
       const _m=new Date().getMonth()+1;
-      const prompt=`今は${_m}月です。「${cl(category)}」に関連した一言コメントを日本語30文字以内で返して。${_m}月らしい話題や豆知識を自然に取り入れて。友達に話すような軽いトーンで。${note&&note!=="📷"?`発見メモ:「${note}」。`:""}前置きや説明は不要。`;
+      const prompt=`今は${_m}月です。「${cl(category)}」に関する豆知識や感想を1文・40文字以内で返して。${note&&note!=="📷"?`発見メモ:「${note}」を参考に。`:""}${_m}月らしさを自然に取り入れて。友達に話すような軽いトーンで。絶対に1文だけ・40文字以内。`;
       geminiGenerate(prompt,500).then(aiText=>{
           if(aiText&&entry?.id){
             supa(`discoveries?id=eq.${entry.id}`,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({ai_msg:aiText})},token).catch(()=>{});

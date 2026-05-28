@@ -177,32 +177,41 @@ function Polaroid({photo,emoji,category,rotate=0,small=false,note="",userName=""
 }
 function CanvasArt({color,id}){
   const W=155,H=140;
-  const base=color||"#83b195";
-  const fid=`ca${String(id||"x").replace(/[^a-z0-9]/gi,"").slice(0,12)}`;
-  function x2h(hex){const r=parseInt((hex).slice(1,3),16)/255,g=parseInt((hex).slice(3,5),16)/255,b=parseInt((hex).slice(5,7),16)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0,s=0,l=(mx+mn)/2;if(d){s=l>0.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}h/=6;}return[h*360,s*100,l*100];}
+  const fid=`ca${String(id||"x").replace(/[^a-z0-9]/gi,"").slice(0,16)}`;
+  function x2h(hex){const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0,s=0,l=(mx+mn)/2;if(d){s=l>0.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}h/=6;}return[h*360,s*100,l*100];}
   function h2x(h,s,l){s/=100;l/=100;const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12,c=l-a*Math.max(Math.min(k-3,9-k,1),-1);return Math.round(255*c).toString(16).padStart(2,"0");};return`#${f(0)}${f(8)}${f(4)}`;}
+  const base=color||"#83b195";
   const [h,s,l]=x2h(base);
-  const pal=[h2x(h,Math.min(s*1.2,100),Math.max(l-22,8)),base,h2x(h,Math.max(s*0.7,5),Math.min(l+22,88)),h2x((h+28)%360,s*0.9,l),h2x(h,Math.max(s-28,0),Math.min(l+38,95))];
+  const bg=h2x(h,Math.max(s-30,0),Math.min(l+40,96));
+  const pal=[base,h2x(h,Math.min(s*1.2,100),Math.max(l-22,8)),h2x(h,Math.max(s*0.7,5),Math.min(l+22,88)),h2x((h+25)%360,s*0.9,l),h2x((h-25+360)%360,s*0.8,l),h2x(h,Math.max(s-28,0),Math.min(l+40,95))];
   const idh=String(id||"").split("").reduce((a,c)=>((a<<5)-a+c.charCodeAt(0))|0,0);
-  let _rs=(Math.abs(idh)||1)*1664525+1013904223>>>0;
+  let _rs=((Math.abs(idh)||1)*1664525+1013904223)>>>0;
   const rng=()=>{_rs=(_rs*1664525+1013904223)>>>0;return _rs/4294967296;};
-  function blob(cx,cy,r){const n=7,pts=[];for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2,d=r*(0.45+rng()*0.9);pts.push([cx+Math.cos(a)*d,cy+Math.sin(a)*d]);}const f=v=>v.toFixed(1);let d=`M${f(pts[0][0])},${f(pts[0][1])}`;for(let i=0;i<n;i++){const p=pts[(i-1+n)%n],c=pts[i],ne=pts[(i+1)%n],n2=pts[(i+2)%n];const c1x=c[0]+(ne[0]-p[0])/6,c1y=c[1]+(ne[1]-p[1])/6,c2x=ne[0]-(n2[0]-c[0])/6,c2y=ne[1]-(n2[1]-c[1])/6;d+=`C${f(c1x)},${f(c1y)},${f(c2x)},${f(c2y)},${f(ne[0])},${f(ne[1])}`;}return d+"Z";}
-  const blobs=pal.map(c=>({d:blob(W*(0.12+rng()*0.76),H*(0.1+rng()*0.8),W*(0.2+rng()*0.32)),fill:c,op:0.7+rng()*0.25}));
-  const bg=h2x(h,Math.max(s-30,0),Math.min(l+38,96));
+  const rc=()=>pal[Math.floor(rng()*pal.length)];
+  const f1=v=>v.toFixed(1);
+  function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  function blobD(cx,cy,r,n=8){const pts=[];for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2,d=r*(0.5+rng()*0.9);pts.push([cx+Math.cos(a)*d,cy+Math.sin(a)*d]);}let d=`M${f1(pts[0][0])},${f1(pts[0][1])}`;for(let i=0;i<n;i++){const p=pts[(i-1+n)%n],c=pts[i],ne=pts[(i+1)%n],n2=pts[(i+2)%n];const c1x=c[0]+(ne[0]-p[0])/6,c1y=c[1]+(ne[1]-p[1])/6,c2x=ne[0]-(n2[0]-c[0])/6,c2y=ne[1]-(n2[1]-c[1])/6;d+=`C${f1(c1x)},${f1(c1y)},${f1(c2x)},${f1(c2y)},${f1(ne[0])},${f1(ne[1])}`;}return d+"Z";}
+  function genFloral(){const el=[];const n=1+Math.floor(rng()*2);for(let f=0;f<n;f++){const cx=W*(0.15+rng()*0.7),cy=H*(0.15+rng()*0.7),r=W*(0.12+rng()*0.13),np=6+Math.floor(rng()*3),col=rc(),op=f1(0.55+rng()*0.3);for(let p=0;p<np;p++){const a=(p/np)*Math.PI*2,px=cx+Math.cos(a)*r*0.55,py=cy+Math.sin(a)*r*0.55;el.push(<ellipse key={`fl${f}${p}`} cx={f1(px)} cy={f1(py)} rx={f1(r*0.38)} ry={f1(r*0.18)} transform={`rotate(${f1(a*180/Math.PI+90)} ${f1(px)} ${f1(py)})`} fill={col} opacity={op}/>);}el.push(<circle key={`flc${f}`} cx={f1(cx)} cy={f1(cy)} r={f1(r*0.22)} fill={rc()} opacity="0.85"/>);}return el;}
+  function genSplash(){const el=[];const cx=W*(0.2+rng()*0.6),cy=H*(0.2+rng()*0.6),r=W*(0.18+rng()*0.18);el.push(<path key="sp" d={blobD(cx,cy,r)} fill={rc()} opacity={f1(0.75+rng()*0.15)}/>);const nd=4+Math.floor(rng()*5);for(let i=0;i<nd;i++){const a=rng()*Math.PI*2,dist=r*(1.1+rng()*0.7);el.push(<circle key={`spd${i}`} cx={f1(cx+Math.cos(a)*dist)} cy={f1(cy+Math.sin(a)*dist)} r={f1(W*(0.02+rng()*0.05))} fill={rc()} opacity={f1(0.6+rng()*0.35)}/>);}return el;}
+  function genDots(){const el=[];const rows=5,cols=6;for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){if(rng()>0.72)continue;const cx=(c+0.5)*(W/cols)+(rng()-0.5)*(W/cols)*0.5,cy=(r+0.5)*(H/rows)+(rng()-0.5)*(H/rows)*0.5;el.push(<circle key={`dt${r}${c}`} cx={f1(cx)} cy={f1(cy)} r={f1(W*(0.04+rng()*0.08))} fill={rc()} opacity={f1(0.5+rng()*0.45)}/>);}}return el;}
+  function genSwipe(){const el=[];const ns=3+Math.floor(rng()*4);for(let i=0;i<ns;i++){const y=H*(0.1+rng()*0.8),sw=H*(0.07+rng()*0.11),cp1x=W*(0.1+rng()*0.4),cp1y=y+(rng()-0.5)*H*0.35,cp2x=W*(0.5+rng()*0.4),cp2y=y+(rng()-0.5)*H*0.35;el.push(<path key={`sw${i}`} d={`M-10,${f1(y)}C${f1(cp1x)},${f1(cp1y)} ${f1(cp2x)},${f1(cp2y)} ${W+10},${f1(y+(rng()-0.5)*H*0.15)}`} stroke={rc()} strokeWidth={f1(sw)} fill="none" opacity={f1(0.55+rng()*0.35)} strokeLinecap="round"/>);}return el;}
+  function genHex(){const el=[];const hr=W/(6+Math.floor(rng()*3)),hW=hr*Math.sqrt(3),hH=hr*2,nc=Math.ceil(W/hW)+2,nr=Math.ceil(H/(hH*0.75))+2;for(let r=0;r<nr;r++){for(let c=0;c<nc;c++){if(rng()>0.8)continue;const cx=(c+(r%2)*0.5)*hW-hW*0.5,cy=r*hH*0.75-hH*0.25,pts=Array.from({length:6},(_,i)=>{const a=(i/6)*Math.PI*2-Math.PI/6;return`${f1(cx+Math.cos(a)*hr)},${f1(cy+Math.sin(a)*hr)}`;});el.push(<polygon key={`hx${r}${c}`} points={pts.join(' ')} fill={rc()} opacity={f1(0.4+rng()*0.5)}/>);}}return el;}
+  const r0=rng(),numS=r0<0.70?1:r0<0.92?2:3;
+  const layers=shuffle(['floral','splash','dots','swipe','hex']).slice(0,numS).flatMap(s=>({floral:genFloral,splash:genSplash,dots:genDots,swipe:genSwipe,hex:genHex}[s]()));
   return(
     <div style={{display:"inline-block",background:"#f5f0e8",padding:"8px",position:"relative",boxShadow:"2px 6px 20px rgba(0,0,0,0.18),0 1px 4px rgba(0,0,0,0.10)",borderRadius:1}}>
       <svg width={W} height={H} style={{display:"block"}}>
         <defs>
           <filter id={fid} x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" result="n"/>
+            <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch" result="n"/>
             <feColorMatrix type="saturate" values="0" in="n" result="gn"/>
             <feBlend in="SourceGraphic" in2="gn" mode="overlay"/>
           </filter>
         </defs>
         <rect width={W} height={H} fill={bg}/>
-        {blobs.map((b,i)=><path key={i} d={b.d} fill={b.fill} opacity={b.op}/>)}
-        <rect width={W} height={H} fill={base} opacity={0.05} filter={`url(#${fid})`}/>
-        <rect width={W} height={H} fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth={10}/>
+        {layers}
+        <rect width={W} height={H} fill={base} opacity={0.04} filter={`url(#${fid})`}/>
+        <rect width={W} height={H} fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={8}/>
       </svg>
     </div>
   );

@@ -1004,15 +1004,15 @@ function ProfileModal({myUserId,myUserName,myAvatar,targetUserId,targetUserName,
           {userDisc.length===0&&<div style={{textAlign:"center",padding:"40px 0",color:"rgba(100,80,80,0.6)"}}><div style={{fontSize:32,marginBottom:8}}>🌱</div><div style={{fontSize:13,fontFamily:font}}>まだ投稿がありません</div></div>}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"24px 12px"}}>
             {userDisc.map((d,i)=>{
-              const rot=itemRot(d.id),sRot=stickyRot(d.id);
+              const rot=itemRot(d.id),sRot=stickyRot(d.id),hasPhoto=!!d.photo;
               return(
-                <div key={d.id} onClick={()=>onItemClick&&onItemClick(d)} style={{cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",paddingTop:10,position:"relative"}}>
-                  <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:12,height:18,zIndex:2,display:"flex",gap:2}}>
+                <div key={d.id} onClick={()=>onItemClick&&onItemClick(d)} style={{cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",paddingTop:hasPhoto?10:0,position:"relative"}}>
+                  {hasPhoto&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:12,height:18,zIndex:2,display:"flex",gap:2}}>
                     <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
                     <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
-                  </div>
-                  <div style={{transform:`rotate(${rot}deg)`,transformOrigin:"top center",filter:"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))"}}>
-                    {d.photo?<Polaroid photo={d.photo} emoji={d.emoji} category={d.category} note={d.note}/>:<CanvasArt color={getColor(d)} id={d.id}/>}
+                  </div>}
+                  <div style={{transform:hasPhoto?`rotate(${rot}deg)`:"none",transformOrigin:"top center",filter:hasPhoto?"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))":"none"}}>
+                    {hasPhoto?<Polaroid photo={d.photo} emoji={d.emoji} category={d.category} note={d.note}/>:<CanvasArt color={getColor(d)} id={d.id}/>}
                   </div>
                   {d.ai_msg&&<div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}><StickyNote text={d.ai_msg} colorKey={stickyColors[i%stickyColors.length]}/></div>}
                 </div>
@@ -1079,15 +1079,15 @@ const CorkBoard=memo(function CorkBoard({items,onItemClick,showUser=false}){
   return(
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"24px 12px"}}>
       {items.map((d,i)=>{
-        const rot=itemRot(d.id),sRot=stickyRot(d.id);
+        const rot=itemRot(d.id),sRot=stickyRot(d.id),hasPhoto=!!d.photo;
         return(
-          <div key={d.id} onClick={()=>onItemClick(d)} style={{cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",paddingTop:10,position:"relative"}}>
-            <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:12,height:18,zIndex:2,display:"flex",gap:2}}>
+          <div key={d.id} onClick={()=>onItemClick(d)} style={{cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",paddingTop:hasPhoto?10:0,position:"relative"}}>
+            {hasPhoto&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:12,height:18,zIndex:2,display:"flex",gap:2}}>
               <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
               <div style={{width:5,height:18,background:"#7a6040",borderRadius:"2px 2px 3px 3px",boxShadow:"1px 1px 2px rgba(0,0,0,0.3)"}}/>
-            </div>
-            <div style={{transform:`rotate(${rot}deg)`,transformOrigin:"top center",filter:"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))"}}>
-              {d.photo?<Polaroid photo={d.photo} emoji={d.emoji} category={d.category} note={d.note} userName={showUser?d.user_name:""}/>:<CanvasArt color={getColor(d)} id={d.id}/>}
+            </div>}
+            <div style={{transform:hasPhoto?`rotate(${rot}deg)`:"none",transformOrigin:"top center",filter:hasPhoto?"drop-shadow(2px 4px 8px rgba(0,0,0,0.25))":"none"}}>
+              {hasPhoto?<Polaroid photo={d.photo} emoji={d.emoji} category={d.category} note={d.note} userName={showUser?d.user_name:""}/>:<CanvasArt color={getColor(d)} id={d.id}/>}
             </div>
             {d.ai_msg&&<div style={{transform:`rotate(${sRot}deg)`,marginTop:-8,width:"90%"}}><StickyNote text={d.ai_msg} colorKey={stickyColors[i%stickyColors.length]}/></div>}
           </div>

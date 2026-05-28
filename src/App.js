@@ -190,7 +190,7 @@ function CanvasArt({color,id}){
   const blobs=pal.map(c=>({d:blob(W*(0.12+rng()*0.76),H*(0.1+rng()*0.8),W*(0.2+rng()*0.32)),fill:c,op:0.7+rng()*0.25}));
   const bg=h2x(h,Math.max(s-30,0),Math.min(l+38,96));
   return(
-    <div style={{display:"inline-block",background:"#f5f0e8",padding:"8px",position:"relative",boxShadow:"5px 5px 0 #b8a07a,3px 3px 0 #cdb48a",borderRadius:1}}>
+    <div style={{display:"inline-block",background:"#f5f0e8",padding:"8px",position:"relative",boxShadow:"2px 6px 20px rgba(0,0,0,0.18),0 1px 4px rgba(0,0,0,0.10)",borderRadius:1}}>
       <svg width={W} height={H} style={{display:"block"}}>
         <defs>
           <filter id={fid} x="-5%" y="-5%" width="110%" height="110%">
